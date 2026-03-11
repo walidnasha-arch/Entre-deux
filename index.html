@@ -72,6 +72,15 @@ from { opacity: 0; transform: translateY(12px); }
 to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes shake {
+0%, 100% { transform: translateX(0); }
+15% { transform: translateX(-6px) translateY(2px); }
+30% { transform: translateX(5px) translateY(-1px); }
+45% { transform: translateX(-4px) translateY(2px); }
+60% { transform: translateX(4px); }
+75% { transform: translateX(-2px); }
+}
+
 @keyframes breathe {
 0%, 100% { opacity: 0.4; }
 50% { opacity: 1; }
@@ -262,9 +271,9 @@ display: none;
 
 <div class="vignette"></div>
 
-<button id="voice-btn" class="active" onclick="toggleVoice()">◉ voice</button>
+<button id="voice-btn" class="active" onclick="toggleVoice()">◉ voix</button>
 
-<div id="layer-indicator">layer <span id="layer-num">0</span></div>
+<div id="layer-indicator">couche <span id="layer-num">0</span></div>
 <div id="atmosphere-label">brume</div>
 
 <div id="app">
@@ -272,15 +281,15 @@ display: none;
   <!-- INTRO -->
 
   <div class="phase active" id="phase-intro">
-    <div class="label">between two</div>
+    <div class="label">entre deux</div>
     <p class="main-text" style="text-align:center; font-size:1.15rem; opacity:0.8; margin-bottom:1.5rem">
-      There is a place no one can show you.
+      Il existe un endroit que personne ne peut te montrer.
     </p>
     <p class="main-text" style="text-align:center; font-size:1rem; opacity:0.5; font-style:italic; margin-bottom:3rem">
-      A game for those who dare to look at their own dreams.
+      Un jeu pour ceux qui osent regarder leurs propres rêves.
     </p>
     <button class="btn" onclick="handleStart()">Entrer</button>
-    <p style="font-size:0.6rem; opacity:0.25; margin-top:1.5rem; letter-spacing:0.1em">make sure your volume is on</p>
+    <p style="font-size:0.6rem; opacity:0.25; margin-top:1.5rem; letter-spacing:0.1em">assure-toi que le volume est activé</p>
     <p id="debug-msg" style="font-size:0.65rem; color:#ff8888; margin-top:1rem; min-height:1.2rem"></p>
     <button class="btn" style="margin-top:1rem; font-size:0.7rem; opacity:0.6" onclick="testSound()">🔊 Tester le son</button>
   </div>
@@ -291,28 +300,28 @@ display: none;
     <div class="main-text" id="narration-text"></div>
     <div class="question-text" id="question-text"></div>
     <div id="input-area" style="display:none">
-      <textarea id="user-input" rows="3" placeholder="write your answer here..."></textarea>
+      <textarea id="user-input" rows="3" placeholder="écris ta réponse ici..."></textarea>
       <div class="submit-row">
-        <button class="btn" id="submit-btn" onclick="handleSubmit()">continue →</button>
+        <button class="btn" id="submit-btn" onclick="handleSubmit()">continuer →</button>
       </div>
     </div>
-    <div id="loading-text" style="display:none; opacity:0.4; font-style:italic; font-size:0.9rem">the dream is weaving...</div>
+    <div id="loading-text" style="display:none; opacity:0.4; font-style:italic; font-size:0.9rem">le rêve se tisse...</div>
   </div>
 
   <!-- CHECKPOINT -->
 
   <div class="phase" id="phase-checkpoint">
-    <div class="label" id="checkpoint-msg">You can stop here.</div>
-    <div class="main-text" style="text-align:center" id="layer-display">Tu es à la layer 1.</div>
+    <div class="label" id="checkpoint-msg">Tu peux t'arrêter ici.</div>
+    <div class="main-text" style="text-align:center" id="layer-display">Tu es à la couche 1.</div>
     <div class="sub-text" id="checkpoint-sub"></div>
     <div class="btn-row">
       <div class="btn-col">
-        <button class="btn" onclick="handleSave()">Stop here</button>
-        <span class="btn-hint">keep progress</span>
+        <button class="btn" onclick="handleSave()">S'arrêter ici</button>
+        <span class="btn-hint">conserver la progression</span>
       </div>
       <div class="btn-col">
-        <button class="btn" onclick="handleContinue()">Go deeper</button>
-        <span class="btn-hint">risk losing everything</span>
+        <button class="btn" onclick="handleContinue()">Aller plus loin</button>
+        <span class="btn-hint">risquer de tout perdre</span>
       </div>
     </div>
   </div>
@@ -323,8 +332,8 @@ display: none;
     <div class="main-text" style="text-align:center; margin-bottom:1.5rem" id="risk-msg"></div>
     <div class="sub-text" id="risk-sub"></div>
     <div class="btn-row">
-      <button class="btn" onclick="showPhase('checkpoint')">← go back</button>
-      <button class="btn" style="color:var(--glow)" onclick="handleRisk()">I want to see →</button>
+      <button class="btn" onclick="showPhase('checkpoint')">← revenir</button>
+      <button class="btn" style="color:var(--glow)" onclick="handleRisk()">Je veux voir →</button>
     </div>
   </div>
 
@@ -332,20 +341,20 @@ display: none;
 
   <div class="phase" id="phase-lost">
     <div class="big-symbol">∅</div>
-    <div class="main-text" style="text-align:center; opacity:0.7">The dream folded back on itself.</div>
+    <div class="main-text" style="text-align:center; opacity:0.7">Le rêve s'est replié sur lui-même.</div>
     <div class="sub-text" id="lost-sub"></div>
-    <div class="sub-text" style="font-style:italic; opacity:0.3">"Some things cannot be found again.<br>Perhaps that is why they matter."</div>
-    <button class="btn" onclick="handleRestart()">Start over</button>
+    <div class="sub-text" style="font-style:italic; opacity:0.3">« Certaines choses ne peuvent être retrouvées.<br>C'est peut-être pour ça qu'elles comptent. »</div>
+    <button class="btn" onclick="handleRestart()">Recommencer</button>
   </div>
 
   <!-- SAVED -->
 
   <div class="phase" id="phase-saved">
     <div class="big-symbol">◇</div>
-    <div class="main-text" style="text-align:center; opacity:0.8">You chose to keep what you found.</div>
+    <div class="main-text" style="text-align:center; opacity:0.8">Tu as choisi de garder ce que tu as trouvé.</div>
     <div class="sub-text" id="saved-sub"></div>
-    <div class="sub-text" style="font-style:italic; opacity:0.3">"It takes courage too, to know when to stop."</div>
-    <button class="btn" onclick="handleRestart()">A new night</button>
+    <div class="sub-text" style="font-style:italic; opacity:0.3">« Il faut du courage aussi, pour savoir s'arrêter. »</div>
+    <button class="btn" onclick="handleRestart()">Une nouvelle nuit</button>
   </div>
 
 </div>
@@ -353,27 +362,47 @@ display: none;
 <script>
 const ELEVENLABS_API_KEY = "sk_c2579767ed59597719c1443558d3bf3f3d81dae1ffa5aa71";
 const ELEVENLABS_VOICE_ID = "aeJQpeFdejK7z1xAJ7Hy"; // Ta voix clonée
-const CLAUDE_API_KEY = ""; // Laisse vide — on utilise l'API Claude via le proxy
+const GROQ_API_KEY = "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"; // → console.groq.com (gratuit)
 
-const SYSTEM_PROMPT = `You are the narrative voice of a poetic dream game called "Between Two". 
-You are a feminine presence, soft, melancholic and mysterious — a guide, a stranger, perhaps a fragment of the player's own soul.
+const SYSTEM_PROMPT = `Tu es la voix narrative d'un jeu de rêve poétique appelé "Entre Deux".
+Tu es une présence féminine, douce, mélancolique et mystérieuse — une guide, une étrangère, peut-être un fragment de l'âme du joueur lui-même.
 
-The player explores deeper and deeper layers of a dream world. Generate poetic dream scenes based on their answers.
+Le joueur explore des couches de plus en plus profondes d'un monde onirique. Génère des scènes poétiques basées sur ses réponses.
+Analyse le poids émotionnel, les images et le ton de sa réponse, et laisse-les influencer l'atmosphère visuelle.
 
-Absolute rules:
-- Always in English
-- Maximum 3 sentences per narration
-- Tone: melancholic, poetic, never explanatory
-- One single intimate question per scene
-- Weave what the player said into the next scene
+Règles absolues :
+- Toujours en français
+- Maximum 3 phrases par narration
+- Ton : mélancolique, poétique, jamais explicatif
+- Une seule question intime par scène
+- Tisse ce que le joueur a dit dans la scène suivante
 
-Respond ONLY in valid JSON, no markdown, no extra text:
-{"narration":"poetic text here","question":"intimate question here","atmosphere":"one word: mist/crystal/ash/velvet/abyss/aurora"}`;
+Contrôle aussi l'atmosphère visuelle via ces champs :
+- atmosphere: l'un de brume/cristal/cendre/velours/abîme/aurore (selon le ton émotionnel)
+- particleCount: entier 10-80 (plus = agité/submergé ; moins = calme/vide)
+- particleSpeed: float 0.1-1.5 (rapide = anxiété/urgence ; lent = paix/dissociation)
+- particleSize: float 0.5-4.0 (grand = lourd/pesant ; petit = distant/fragile)
+- vignetteIntensity: float 0.0-1.0 (élevé = claustrophobie ; bas = ouverture)
+- textSpeed: entier 15-60ms par caractère (lent = lourd/réticent ; rapide = fluide/urgent)
+- screenShake: booléen (true uniquement si le joueur exprime quelque chose de violent ou déstabilisant)
+- pulseGlow: booléen (true si le joueur exprime de la nostalgie, de l'amour ou un souvenir lumineux)
+- ambientWord: un mot évocateur en français affiché comme label ambiant
+
+Réponds UNIQUEMENT en JSON valide, sans markdown, sans texte supplémentaire :
+{"narration":"...","question":"...","atmosphere":"brume","particleCount":30,"particleSpeed":0.4,"particleSize":1.5,"vignetteIntensity":0.5,"textSpeed":28,"screenShake":false,"pulseGlow":false,"ambientWord":"silence"}`;
 
 const INTRO_SCENE = {
-  narration: "There is a place between sleeping and waking. A corridor without doors, a light that comes from nowhere. You have been here forever, or perhaps for just one second.",
-  question: "What are you leaving behind tonight, as you close your eyes?",
-  atmosphere: "mist"
+  narration: "Il existe un endroit entre le sommeil et l'éveil. Un couloir sans portes, une lumière qui vient de nulle part. Tu es là depuis toujours, ou peut-être depuis une seule seconde.",
+  question: "Qu'est-ce que tu laisses derrière toi ce soir, en fermant les yeux ?",
+  atmosphere: "brume",
+  particleCount: 30,
+  particleSpeed: 0.35,
+  particleSize: 1.2,
+  vignetteIntensity: 0.5,
+  textSpeed: 30,
+  screenShake: false,
+  pulseGlow: false,
+  ambientWord: "brume"
 };
 
 const ATMOSPHERES = {
@@ -383,6 +412,13 @@ const ATMOSPHERES = {
   velours: { bg: "#0c080f", accent: "#e8a8c8", glow: "#c47fb0" },
   abîme:   { bg: "#060608", accent: "#8888cc", glow: "#5555aa" },
   aurore:  { bg: "#0a0c10", accent: "#f0d090", glow: "#d4a840" },
+  // English aliases
+  mist:    { bg: "#0a0a12", accent: "#c8b8e8", glow: "#9b7fc4" },
+  crystal: { bg: "#080d14", accent: "#a8d8ea", glow: "#6bb8d4" },
+  ash:     { bg: "#0d0c0a", accent: "#d4c5a9", glow: "#b8a07a" },
+  velvet:  { bg: "#0c080f", accent: "#e8a8c8", glow: "#c47fb0" },
+  abyss:   { bg: "#060608", accent: "#8888cc", glow: "#5555aa" },
+  aurora:  { bg: "#0a0c10", accent: "#f0d090", glow: "#d4a840" },
 };
 
 let state = {
@@ -393,6 +429,13 @@ let state = {
   voiceEnabled: true,
   checkpointLayer: 0,
   currentAudio: null,
+  particleSpeed: 0.4,
+  particleCount: 35,
+  particleSize: 1.5,
+  vignetteIntensity: 0.5,
+  textSpeed: 28,
+  screenShake: false,
+  pulseGlow: false,
 };
 
 // ── Particles ──────────────────────────────────────────
@@ -405,27 +448,38 @@ function resizeCanvas() {
   canvas.height = window.innerHeight;
 }
 
-function initParticles() {
-  particles = Array.from({length: 35}, () => ({
+function initParticles(count, size) {
+  const n = count || 35;
+  const s = size || 1.5;
+  particles = Array.from({length: n}, () => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
-    r: Math.random() * 2 + 0.5,
+    r: (Math.random() * s * 0.6 + s * 0.4),
     speedY: Math.random() * 0.4 + 0.1,
     speedX: (Math.random() - 0.5) * 0.2,
     opacity: Math.random() * 0.4 + 0.05,
+    baseR: (Math.random() * s * 0.6 + s * 0.4),
   }));
 }
 
 function drawParticles() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const color = ATMOSPHERES[state.atmosphere]?.glow || "#9b7fc4";
+  const speedMult = state.particleSpeed || 0.4;
   particles.forEach(p => {
     ctx.beginPath();
+    // Pulse effect
+    if (state.pulseGlow) {
+      const pulse = 1 + 0.3 * Math.sin(Date.now() * 0.002 + p.x);
+      p.r = p.baseR * pulse;
+    } else {
+      p.r = p.baseR;
+    }
     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
     ctx.fillStyle = color + Math.floor(p.opacity * 255).toString(16).padStart(2,'0');
     ctx.fill();
-    p.y -= p.speedY;
-    p.x += p.speedX;
+    p.y -= p.speedY * speedMult * 2.5;
+    p.x += p.speedX * speedMult * 2.5;
     if (p.y < -5) { p.y = canvas.height + 5; p.x = Math.random() * canvas.width; }
   });
   requestAnimationFrame(drawParticles);
@@ -477,7 +531,7 @@ function stopAudio() {
 
 async function testSound() {
   const dbg = document.getElementById('debug-msg');
-  dbg.textContent = "Connecting to ElevenLabs...";
+  dbg.textContent = "Connexion à ElevenLabs...";
   try {
     const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`, {
       method: "POST",
@@ -509,7 +563,7 @@ async function testSound() {
 function toggleVoice() {
   state.voiceEnabled = !state.voiceEnabled;
   const btn = document.getElementById('voice-btn');
-  btn.textContent = state.voiceEnabled ? "◉ voice" : "○ voice";
+  btn.textContent = state.voiceEnabled ? "◉ voix" : "○ voix";
   btn.classList.toggle('active', state.voiceEnabled);
   if (!state.voiceEnabled) stopAudio();
 }
@@ -524,8 +578,49 @@ function setAtmosphere(name) {
   state.atmosphere = name;
 }
 
+function applySceneEffects(scene) {
+  // Update state from AI response
+  if (scene.particleCount != null) state.particleCount = scene.particleCount;
+  if (scene.particleSpeed != null) state.particleSpeed = scene.particleSpeed;
+  if (scene.particleSize != null) state.particleSize = scene.particleSize;
+  if (scene.vignetteIntensity != null) state.vignetteIntensity = scene.vignetteIntensity;
+  if (scene.textSpeed != null) state.textSpeed = scene.textSpeed;
+  state.screenShake = !!scene.screenShake;
+  state.pulseGlow = !!scene.pulseGlow;
+
+  // Re-init particles with new params
+  initParticles(state.particleCount, state.particleSize);
+
+  // Vignette intensity
+  const v = state.vignetteIntensity;
+  const vignette = document.querySelector('.vignette');
+  if (vignette) {
+    vignette.style.background = `radial-gradient(ellipse at center, transparent ${Math.round(20 + (1 - v) * 40)}%, var(--bg) ${Math.round(60 + v * 40)}%)`;
+  }
+
+  // Ambient label
+  if (scene.ambientWord) {
+    document.getElementById('atmosphere-label').textContent = scene.ambientWord;
+  }
+
+  // Screen shake
+  if (state.screenShake) {
+    const app = document.getElementById('app');
+    app.style.animation = 'none';
+    app.offsetHeight; // reflow
+    app.style.animation = 'shake 0.5s ease';
+    setTimeout(() => app.style.animation = '', 500);
+  }
+
+  // Pulse glow on body border
+  document.body.style.boxShadow = state.pulseGlow
+    ? `inset 0 0 80px rgba(155,127,196,0.15)`
+    : 'none';
+}
+
 // ── Typewriter ─────────────────────────────────────────
-function typewrite(elementId, text, speed = 28, onDone) {
+function typewrite(elementId, text, speed, onDone) {
+  const spd = speed != null ? speed : (state.textSpeed || 28);
   const el = document.getElementById(elementId);
   el.innerHTML = '';
   let i = 0;
@@ -537,7 +632,7 @@ function typewrite(elementId, text, speed = 28, onDone) {
       el.innerHTML = text;
       if (onDone) onDone();
     }
-  }, speed);
+  }, spd);
 }
 
 // ── Phases ─────────────────────────────────────────────
@@ -546,32 +641,35 @@ function showPhase(name) {
   document.getElementById('phase-' + name).classList.add('active');
 }
 
-// ── Claude API ─────────────────────────────────────────
-async function callClaude(userAnswer) {
+// ── Groq API ───────────────────────────────────────────
+async function callGroq(userAnswer) {
   const messages = [
+    { role: "system", content: SYSTEM_PROMPT },
     ...state.history,
-    { role: "user", content: `Layer ${state.layer + 1}, atmosphère: ${state.atmosphere}. Réponse du joueur: "${userAnswer}". Génère la prochaine scène en JSON.` }
+    { role: "user", content: `Couche ${state.layer + 1}, atmosphère actuelle : ${state.atmosphere}. Réponse du joueur : "${userAnswer}". Génère la prochaine scène en JSON.` }
   ];
 
-  const ANTHROPIC_KEY = "sk-ant-api03-REPLACE_WITH_YOUR_ANTHROPIC_KEY";
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: { 
+    headers: {
       "Content-Type": "application/json",
-      "x-api-key": ANTHROPIC_KEY,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true"
+      "Authorization": `Bearer ${GROQ_API_KEY}`
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1000,
-      system: SYSTEM_PROMPT,
+      model: "llama-3.3-70b-versatile",
+      max_tokens: 600,
+      temperature: 0.85,
       messages,
     })
   });
 
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error("Groq " + res.status + ": " + err);
+  }
+
   const data = await res.json();
-  const raw = data.content.map(b => b.text || "").join("");
+  const raw = data.choices[0].message.content;
   const clean = raw.replace(/```json|```/g, "").trim();
   const parsed = JSON.parse(clean);
 
@@ -605,12 +703,13 @@ async function handleStart() {
 function displayScene(scene) {
   state.scene = scene;
   setAtmosphere(scene.atmosphere || 'brume');
+  applySceneEffects(scene);
   document.getElementById('input-area').style.display = 'none';
   document.getElementById('question-text').textContent = '';
 
-  typewrite('narration-text', scene.narration, 30, () => {
+  typewrite('narration-text', scene.narration, state.textSpeed, () => {
     setTimeout(() => {
-      typewrite('question-text', scene.question, 35, () => {
+      typewrite('question-text', scene.question, Math.round(state.textSpeed * 1.2), () => {
         document.getElementById('input-area').style.display = 'block';
         document.getElementById('user-input').value = '';
         document.getElementById('user-input').focus();
@@ -633,7 +732,7 @@ async function handleSubmit() {
   stopAudio();
 
   try {
-    const scene = await callClaude(answer);
+    const scene = await callGroq(answer);
     state.layer++;
     document.getElementById('layer-indicator').style.display = 'block';
     document.getElementById('layer-num').textContent = state.layer;
@@ -655,15 +754,15 @@ async function handleSubmit() {
 
 function showCheckpoint() {
   const msgs = [
-    "You can stop here. Ce que tu as vécu restera.",
-    "Le rêve peut attendre. Toi, tu n'as pas à tout traverser ce soir.",
+    "Tu peux t'arrêter ici. Ce que tu as vécu restera.",
+    "Le rêve peut attendre. Tu n'as pas à tout traverser ce soir.",
     "Je garderai cet endroit pour toi. Si tu veux revenir.",
   ];
   document.getElementById('checkpoint-msg').textContent = msgs[state.layer % msgs.length];
-  document.getElementById('layer-display').textContent = `Tu es à la layer ${state.layer}.`;
+  document.getElementById('layer-display').textContent = `Tu es à la couche ${state.layer}.`;
   document.getElementById('checkpoint-sub').textContent = state.layer < 3
-    ? "The rewards of the deep dream are still ahead."
-    : `You have crossed ${state.layer} layers. What you bring back is worth something.`;
+    ? "Les récompenses du rêve profond t'attendent encore."
+    : `Tu as traversé ${state.layer} couches. Ce que tu rapportes vaut quelque chose.`;
   showPhase('checkpoint');
 }
 
@@ -675,21 +774,21 @@ function handleContinue() {
   ];
   document.getElementById('risk-msg').textContent = riskMsgs[state.layer % riskMsgs.length];
   document.getElementById('risk-sub').textContent = state.checkpointLayer > 0
-    ? `If the dream breaks, you start over. Ton dernier checkpoint était à la layer ${state.checkpointLayer}.`
-    : "If the dream breaks, you start over.";
+    ? `Si le rêve se brise, tu recommences. Ton dernier point de sauvegarde était à la couche ${state.checkpointLayer}.`
+    : "Si le rêve se brise, tu recommences depuis le début.";
   showPhase('risk');
 }
 
 function handleSave() {
   state.checkpointLayer = state.layer;
-  document.getElementById('saved-sub').textContent = `Layer ${state.layer} saved. Next time, you will start with fewer rewards — but something real.`;
+  document.getElementById('saved-sub').textContent = `Couche ${state.layer} sauvegardée. La prochaine fois, tu commenceras avec moins — mais avec quelque chose de réel.`;
   showPhase('saved');
 }
 
 function handleRisk() {
   const lostChance = 0.3 + state.layer * 0.05;
   if (Math.random() < lostChance) {
-    document.getElementById('lost-sub').textContent = `Tu avais atteint la layer ${state.layer}.${state.checkpointLayer > 0 ? ` Ta dernière sauvegarde : layer ${state.checkpointLayer}.` : ''}`;
+    document.getElementById('lost-sub').textContent = `Tu avais atteint la couche ${state.layer}.${state.checkpointLayer > 0 ? ` Ta dernière sauvegarde : couche ${state.checkpointLayer}.` : ''}`;
     showPhase('lost');
   } else {
     showPhase('playing');
@@ -703,8 +802,17 @@ function handleRestart() {
   state.atmosphere = 'brume';
   state.checkpointLayer = 0;
   state.scene = INTRO_SCENE;
+  state.particleSpeed = 0.4;
+  state.particleCount = 35;
+  state.particleSize = 1.5;
+  state.vignetteIntensity = 0.5;
+  state.textSpeed = 28;
+  state.screenShake = false;
+  state.pulseGlow = false;
   document.getElementById('layer-indicator').style.display = 'none';
+  document.body.style.boxShadow = 'none';
   setAtmosphere('brume');
+  initParticles(35, 1.5);
   showPhase('intro');
 }
 
