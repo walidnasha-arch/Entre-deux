@@ -272,6 +272,48 @@ input[type=range].vol-slider::-moz-range-thumb {
   border:none; cursor:pointer;
 }
 </style>
+<!-- Firebase SDKs -->
+<script type="module">
+// ═══════════════════════════════════════════════════════
+//  🔥 FIREBASE CONFIG — colle ta config ici
+// ═══════════════════════════════════════════════════════
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithPopup, signInAnonymously, GoogleAuthProvider, onAuthStateChanged, signOut }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyB-YtrqkRkhKewCJ27Kxzb19lH9o9KpBrU",
+  authDomain:        "entre-deux-6ea15.firebaseapp.com",
+  projectId:         "entre-deux-6ea15",
+  storageBucket:     "entre-deux-6ea15.firebasestorage.app",
+  messagingSenderId: "367849417639",
+  appId:             "1:367849417639:web:7ab89fab3615e8b78b6482"
+};
+
+// ── Firebase init ──────────────────────────────────────
+const fbApp  = initializeApp(FIREBASE_CONFIG);
+const fbAuth = getAuth(fbApp);
+const fbDB   = getFirestore(fbApp);
+const gProvider = new GoogleAuthProvider();
+
+// ── Expose globalement ────────────────────────────────
+window.FB = { auth: fbAuth, db: fbDB, doc, getDoc, setDoc, updateDoc, arrayUnion,
+              serverTimestamp, signInWithPopup, signInAnonymously, gProvider, signOut };
+
+// ── Auth state ────────────────────────────────────────
+onAuthStateChanged(fbAuth, async user => {
+  if (user) {
+    window.currentUser = user;
+    await window.loadOrCreateUser(user);
+    window.showPhase('planet');
+  } else {
+    window.currentUser = null;
+    window.showPhase('login');
+  }
+});
+</script>
 </head>
 <body>
 
@@ -306,8 +348,61 @@ input[type=range].vol-slider::-moz-range-thumb {
 
 <div id="app">
 
+  <!-- LOGIN -->
+  <div class="phase active" id="phase-login">
+    <div class="intro-title" style="font-size:2.2rem;margin-bottom:.3rem">Entre Deux</div>
+    <div class="intro-sub" style="margin-bottom:2.5rem">un espace pour toi</div>
+    <canvas id="planet-preview-canvas" width="200" height="200"
+      style="border-radius:50%;margin-bottom:2rem;opacity:.85;filter:blur(.4px) drop-shadow(0 0 28px rgba(123,79,212,.6))"></canvas>
+    <div style="color:rgba(212,216,240,.55);font-size:.82rem;margin-bottom:1.8rem;text-align:center;max-width:280px;line-height:1.7">
+      Connecte-toi pour que ta planète<br>evolue avec chaque session.
+    </div>
+    <button class="btn" id="btn-google" onclick="handleGoogleLogin()" style="display:flex;align-items:center;gap:.6rem;margin-bottom:.8rem">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/></svg>
+      Continuer avec Google
+    </button>
+    <button class="btn" onclick="handleAnonLogin()" style="background:rgba(255,255,255,.06);font-size:.8rem;padding:.55rem 1.6rem">
+      Continuer anonymement
+    </button>
+    <p id="login-err" style="color:#ff8888;font-size:.75rem;margin-top:.8rem;display:none"></p>
+  </div>
+
+  <!-- PLANET -->
+  <div class="phase" id="phase-planet">
+    <div style="position:relative;display:flex;flex-direction:column;align-items:center;width:100%">
+      <div style="display:flex;justify-content:space-between;align-items:center;width:100%;max-width:520px;margin-bottom:2rem">
+        <div>
+          <div id="planet-user-name" style="font-family:'Cormorant',serif;font-style:italic;font-size:1.4rem;color:var(--text)"></div>
+          <div id="planet-sessions-count" style="font-size:.72rem;color:rgba(212,216,240,.45);margin-top:.15rem"></div>
+        </div>
+        <button onclick="handleSignOut()" style="background:none;border:1px solid rgba(212,216,240,.15);color:rgba(212,216,240,.4);font-size:.68rem;padding:.3rem .75rem;border-radius:20px;cursor:pointer;font-family:Outfit,sans-serif">deconnexion</button>
+      </div>
+      <div style="position:relative;margin-bottom:1.5rem">
+        <canvas id="planet-main-canvas" width="260" height="260"
+          style="border-radius:50%;filter:drop-shadow(0 0 40px var(--planet-glow,rgba(123,79,212,.5)));transition:filter 1s"></canvas>
+        <div id="planet-biome-label" style="position:absolute;bottom:-1.6rem;left:50%;transform:translateX(-50%);font-size:.7rem;color:rgba(212,216,240,.4);white-space:nowrap;font-family:'Cormorant',serif;font-style:italic"></div>
+      </div>
+      <div id="planet-stats" style="display:flex;gap:2rem;margin:2.2rem 0 2rem;opacity:.7">
+        <div style="text-align:center">
+          <div id="stat-sessions" style="font-size:1.5rem;font-family:'Cormorant',serif">0</div>
+          <div style="font-size:.65rem;color:rgba(212,216,240,.5)">sessions</div>
+        </div>
+        <div style="text-align:center">
+          <div id="stat-maxzone" style="font-size:1.5rem;font-family:'Cormorant',serif">-</div>
+          <div style="font-size:.65rem;color:rgba(212,216,240,.5)">zone max</div>
+        </div>
+        <div style="text-align:center">
+          <div id="stat-streak" style="font-size:1.5rem;font-family:'Cormorant',serif">0</div>
+          <div style="font-size:.65rem;color:rgba(212,216,240,.5)">jours consecutifs</div>
+        </div>
+      </div>
+      <button class="btn" onclick="handleStartFromPlanet()" style="margin-bottom:.6rem">Commencer une session</button>
+      <div style="font-size:.68rem;color:rgba(212,216,240,.3);font-family:'Cormorant',serif;font-style:italic" id="planet-last-session"></div>
+    </div>
+  </div>
+
   <!-- INTRO -->
-  <div class="phase active" id="phase-intro">
+  <div class="phase" id="phase-intro">
     <div class="intro-title">Entre Deux</div>
     <div class="intro-sub">un espace pour toi</div>
     <div class="orb-wrap lg" id="orb-intro">
@@ -1012,7 +1107,7 @@ function typewrite(id,text,speed,onDone){
 }
 
 // ── Phases ─────────────────────────────────────────────
-function showPhase(name){
+window.showPhase = function showPhase(name){
   document.querySelectorAll('.phase').forEach(p=>p.classList.remove('active'));
   document.getElementById('phase-'+name).classList.add('active');
 }
@@ -1052,21 +1147,41 @@ async function callGroq(msg){
 const RETREAT_COLORS = new Set(['#2d8bdb','#c45fa0','#d45f5f','#f0a050']); // tristesse, manque, douleur, anxiété
 const ADVANCE_COLORS = new Set(['#7b4fd4','#50d4a0']); // calme, apaisement
 
+// Compteurs pour éviter les transitions trop rapides
+let positiveStreak = 0;  // échanges positifs consécutifs nécessaires pour avancer
+let negativeStreak = 0;  // échanges négatifs consécutifs nécessaires pour reculer
+const ADVANCE_THRESHOLD = 3; // il faut 3 échanges positifs consécutifs pour avancer d'une zone
+const RETREAT_THRESHOLD = 2; // il faut 2 échanges très négatifs consécutifs pour reculer
+
 function maybeAdvanceZone(resp){
   const color = resp.orbColor || S.orbColor;
   const intensity = resp.intensity != null ? resp.intensity : S.intensity;
+  // Track for planet evolution
+  if(window.trackSessionData) window.trackSessionData(S.zone, intensity);
 
-  // Reculer si couleur sombre ET forte intensité (ça va vraiment mal)
-  if(RETREAT_COLORS.has(color) && intensity > 0.55){
-    if(S.zone > 0) retreatZone();
-  }
-  // Avancer si couleur apaisante OU faible intensité (ça va mieux)
-  else if(ADVANCE_COLORS.has(color) || intensity < 0.35){
-    if(S.zone < 4) advanceZone();
-  }
-  // Sinon : avancement neutre tous les 3 échanges
-  else {
-    const naturalTarget = Math.min(Math.floor(S.exchanges / 3), 4);
+  const isVeryBad = RETREAT_COLORS.has(color) && intensity > 0.55;
+  const isGood    = ADVANCE_COLORS.has(color) && intensity < 0.45;
+
+  if(isVeryBad){
+    negativeStreak++;
+    positiveStreak = 0;
+    if(negativeStreak >= RETREAT_THRESHOLD && S.zone > 0){
+      retreatZone();
+      negativeStreak = 0;
+    }
+  } else if(isGood){
+    positiveStreak++;
+    negativeStreak = 0;
+    if(positiveStreak >= ADVANCE_THRESHOLD && S.zone < 4){
+      advanceZone();
+      positiveStreak = 0;
+    }
+  } else {
+    // Neutre : on réinitialise les streaks partiellement
+    negativeStreak = Math.max(0, negativeStreak - 1);
+    positiveStreak = Math.max(0, positiveStreak - 1);
+    // Avancement très lent sur le temps (tous les 5 échanges neutres)
+    const naturalTarget = Math.min(Math.floor(S.exchanges / 5), 4);
     if(naturalTarget > S.zone) advanceZone();
   }
 }
@@ -1088,26 +1203,31 @@ async function displayAI(resp){
   // Advance the cosmic journey
   maybeAdvanceZone(resp);
 
-  // Trigger ritual if requested (before voice)
+  const el=document.getElementById('ai-text');
+  el.style.opacity='0';
+
+  // D'abord : afficher le texte de l'IA + voix
+  await new Promise(resolve => {
+    speakNow(resp.text).then(()=>{
+      el.style.opacity='1';
+      typewrite('ai-text',resp.text,26,resolve);
+    });
+  });
+
+  // Ensuite : déclencher le ritual APRÈS que le texte soit affiché
   if(resp.ritual && RITUAL_SCRIPTS[resp.ritual]){
     await triggerRitual(resp.ritual);
   }
 
-  const el=document.getElementById('ai-text');
-  el.style.opacity='0';
-
-  speakNow(resp.text).then(()=>{
-    el.style.opacity='1';
-    typewrite('ai-text',resp.text,26,()=>{
-      document.getElementById('inp-wrap').classList.add('on');
-      document.getElementById('user-input').focus();
-    });
-  });
+  // Afficher l'input seulement après tout
+  document.getElementById('inp-wrap').classList.add('on');
+  document.getElementById('user-input').focus();
 
   if(resp.sessionEnd&&resp.endPoem){
     setTimeout(()=>{
       document.getElementById('end-poem').textContent=resp.endPoem;
       showPhase('end');
+      if(window.finalizeSession) window.finalizeSession();
     }, resp.text.length*26+5500);
   }
 }
@@ -1174,6 +1294,7 @@ async function handleReady(){
 function handleRestart(){
   S.history=[]; S.exchanges=0; S.orbColor='#7b4fd4'; S.intensity=.3; S.speaking=false;
   S.zone=0; S.zoneProgress=0;
+  positiveStreak=0; negativeStreak=0;
   stopAudio(); stopMusic();
   NODES.length=0; CCX.clearRect(0,0,CC.width,CC.height);
   document.getElementById('btn-ready').classList.remove('on');
@@ -1183,7 +1304,9 @@ function handleRestart(){
   document.getElementById('session-lbl').textContent='moment 1';
   document.getElementById('zone-indicator').classList.remove('visible');
   updateZoneDots();
-  showPhase('intro');
+  sessionMaxZone=0; sessionIntensities=[];
+  if(window.currentUser) showPhase('planet');
+  else showPhase('intro');
 }
 
 function setLoading(v){
@@ -1272,8 +1395,263 @@ async function testSound(){
 }
 
 // ── Init ───────────────────────────────────────────────
+
+// ══════════════════════════════════════════════════════════
+//  PLANET GENERATION SYSTEM
+// ══════════════════════════════════════════════════════════
+
+const BIOMES = {
+  primordial:  { name:'monde primordial',   colors:['#1a0533','#2d0b5e','#4a1a8a'], atmo:'#7b4fd4' },
+  crystalline: { name:'monde cristallin',   colors:['#0a1a3a','#1a3a6a','#4a7aaa'], atmo:'#50d4a0' },
+  volcanic:    { name:'monde volcanique',   colors:['#2a0a00','#5a1a00','#9a3a10'], atmo:'#d45f5f' },
+  oceanic:     { name:'monde oceanique',    colors:['#001a2a','#003a5a','#00708a'], atmo:'#2d8bdb' },
+  luminous:    { name:'monde lumineux',     colors:['#1a0a2a','#3a1a5a','#7a4ab4'], atmo:'#c4a8ff' },
+  arid:        { name:'monde aride',        colors:['#1a1000','#3a2800','#6a4a10'], atmo:'#f0a050' },
+  verdant:     { name:'monde verdoyant',    colors:['#001a00','#0a3a0a','#1a6a1a'], atmo:'#50d490' },
+};
+
+function seededRand(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    return (s >>> 0) / 0xffffffff;
+  };
+}
+
+function uidToSeed(uid) {
+  let h = 0;
+  for (let i = 0; i < uid.length; i++) {
+    h = Math.imul(31, h) + uid.charCodeAt(i) | 0;
+  }
+  return Math.abs(h);
+}
+
+function computePlanetState(sessions, uid) {
+  const seed = uidToSeed(uid || 'anon');
+  if (!sessions || sessions.length === 0) {
+    return { biome:'primordial', lifeLevel:0.1, formations:3, ring:false,
+             dominantColor:'#7b4fd4', seed, sessions:0, maxZone:0, streak:0 };
+  }
+  const n = sessions.length;
+  const avgZone = sessions.reduce((a,s)=>a+(s.maxZone||0),0)/n;
+  const avgIntensity = sessions.reduce((a,s)=>a+(s.avgIntensity||0.5),0)/n;
+  const maxZoneEver = Math.max(...sessions.map(s=>s.maxZone||0));
+
+  let streak=0;
+  const today=new Date(); today.setHours(0,0,0,0);
+  for(let i=sessions.length-1;i>=0;i--){
+    const d=new Date(sessions[i].date); d.setHours(0,0,0,0);
+    const diff=Math.round((today-d)/86400000);
+    if(diff===streak) streak++;
+    else break;
+  }
+
+  let biome;
+  if(avgZone>=3.5)       biome='luminous';
+  else if(avgZone>=2.5)  biome=avgIntensity<0.45?'crystalline':'verdant';
+  else if(avgZone>=1.5)  biome=avgIntensity>0.65?'volcanic':'oceanic';
+  else                   biome=avgIntensity>0.6?'volcanic':'arid';
+  if(n>=10&&maxZoneEver===4) biome='luminous';
+
+  const lifeLevel=Math.min(1,n/20+avgZone/8);
+  const formations=Math.min(12,Math.floor(3+n*0.5+avgZone));
+  const ring=n>=7&&avgZone>=2;
+  return {biome,lifeLevel,formations,ring,dominantColor:BIOMES[biome].atmo,seed,sessions:n,maxZone:maxZoneEver,streak};
+}
+
+function drawPlanet(canvas, ps) {
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height, cx=W/2, cy=H/2, R=W*0.44;
+  ctx.clearRect(0,0,W,H);
+  const biome=BIOMES[ps.biome]||BIOMES.primordial;
+  const rand=seededRand(ps.seed||12345);
+
+  // Atmosphere
+  const atmoGrad=ctx.createRadialGradient(cx,cy,R*0.85,cx,cy,R*1.35);
+  atmoGrad.addColorStop(0,biome.atmo+'55');
+  atmoGrad.addColorStop(1,'transparent');
+  ctx.fillStyle=atmoGrad;
+  ctx.beginPath(); ctx.arc(cx,cy,R*1.35,0,Math.PI*2); ctx.fill();
+
+  // Base
+  const grad=ctx.createRadialGradient(cx-R*0.28,cy-R*0.28,R*0.1,cx,cy,R);
+  grad.addColorStop(0,biome.colors[2]+'ff');
+  grad.addColorStop(0.5,biome.colors[1]+'ff');
+  grad.addColorStop(1,biome.colors[0]+'ff');
+  ctx.fillStyle=grad;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill();
+
+  // Terrain patches
+  const patches=Math.floor(4+(ps.lifeLevel||0.1)*8);
+  for(let i=0;i<patches;i++){
+    const angle=rand()*Math.PI*2, dist=rand()*R*0.75;
+    const px=cx+Math.cos(angle)*dist, py=cy+Math.sin(angle)*dist*0.6;
+    const pr=R*(0.08+rand()*0.22);
+    const pg=ctx.createRadialGradient(px,py,0,px,py,pr);
+    pg.addColorStop(0,biome.colors[2]+'90'); pg.addColorStop(1,'transparent');
+    ctx.fillStyle=pg;
+    ctx.beginPath(); ctx.arc(px,py,pr,0,Math.PI*2); ctx.fill();
+  }
+
+  // Formations
+  const fCount=Math.min(ps.formations||3,10);
+  for(let i=0;i<fCount;i++){
+    const angle=(i/fCount)*Math.PI*2+rand()*0.8, dist=rand()*R*0.6;
+    const fx=cx+Math.cos(angle)*dist, fy=cy+Math.sin(angle)*dist*0.65;
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx,cy,R-2,0,Math.PI*2); ctx.clip();
+    const fType=i%3;
+    if(fType===0){
+      const h=R*(0.05+rand()*0.12);
+      ctx.fillStyle=biome.atmo+'99';
+      ctx.beginPath(); ctx.moveTo(fx,fy-h); ctx.lineTo(fx-h*0.3,fy+h*0.3); ctx.lineTo(fx+h*0.3,fy+h*0.3); ctx.closePath(); ctx.fill();
+    } else if(fType===1){
+      const cr=R*(0.04+rand()*0.08);
+      ctx.strokeStyle=biome.atmo+'66'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.arc(fx,fy,cr,0,Math.PI*2); ctx.stroke();
+      ctx.fillStyle=biome.colors[0]+'88';
+      ctx.beginPath(); ctx.arc(fx,fy,cr*0.5,0,Math.PI*2); ctx.fill();
+    } else {
+      const mh=R*(0.06+rand()*0.1);
+      ctx.fillStyle=biome.atmo+'55';
+      ctx.beginPath(); ctx.moveTo(fx-mh*0.7,fy+mh*0.2); ctx.lineTo(fx,fy-mh); ctx.lineTo(fx+mh*0.7,fy+mh*0.2); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // Ring
+  if(ps.ring){
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(1,0.28);
+    const rg=ctx.createRadialGradient(0,0,R*1.1,0,0,R*1.7);
+    rg.addColorStop(0,biome.atmo+'55'); rg.addColorStop(0.5,biome.atmo+'22'); rg.addColorStop(1,'transparent');
+    ctx.strokeStyle=rg; ctx.lineWidth=R*0.22;
+    ctx.beginPath(); ctx.arc(0,0,R*1.4,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+
+  // Specular
+  const sp=ctx.createRadialGradient(cx-R*0.32,cy-R*0.32,0,cx-R*0.32,cy-R*0.32,R*0.5);
+  sp.addColorStop(0,'rgba(255,255,255,.18)'); sp.addColorStop(1,'transparent');
+  ctx.fillStyle=sp; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill();
+
+  // Limb darkening
+  const lm=ctx.createRadialGradient(cx,cy,R*0.6,cx,cy,R);
+  lm.addColorStop(0,'transparent'); lm.addColorStop(1,'rgba(0,0,0,.55)');
+  ctx.fillStyle=lm; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill();
+}
+
+function drawLoginPlanet() {
+  const c=document.getElementById('planet-preview-canvas'); if(!c) return;
+  const biomeNames=Object.keys(BIOMES);
+  const ps={biome:biomeNames[Math.floor(Date.now()/4000)%biomeNames.length],
+            lifeLevel:0.4,formations:5,ring:false,seed:Date.now()|0};
+  drawPlanet(c,ps);
+}
+
+// ── Firebase user logic ────────────────────────────────
+let userPlanetState=null;
+
+window.loadOrCreateUser=async function(user){
+  const {db,doc,getDoc,setDoc}=window.FB;
+  const ref=doc(db,'users',user.uid);
+  let snap;
+  try{ snap=await getDoc(ref); }catch(e){ console.warn('Firestore read error',e); return; }
+  if(!snap.exists()){
+    const profile={uid:user.uid,displayName:user.displayName||'Voyageur',
+                   isAnon:user.isAnonymous,createdAt:new Date().toISOString(),sessions:[]};
+    try{ await setDoc(ref,profile); }catch(e){ console.warn('Firestore write error',e); }
+    userPlanetState=computePlanetState([],user.uid);
+  } else {
+    const data=snap.data();
+    userPlanetState=computePlanetState(data.sessions||[],user.uid);
+  }
+  window._userData=snap.exists()?snap.data():{displayName:user.displayName||'Voyageur',sessions:[]};
+  updatePlanetUI();
+};
+
+function updatePlanetUI(){
+  if(!userPlanetState) return;
+  const ps=userPlanetState;
+  const c=document.getElementById('planet-main-canvas');
+  if(c){
+    drawPlanet(c,ps);
+    document.getElementById('planet-biome-label').textContent=BIOMES[ps.biome]?.name||'';
+  }
+  document.getElementById('stat-sessions').textContent=ps.sessions;
+  const zoneNames=['vide','brume','eveil','resonance','cosmos'];
+  document.getElementById('stat-maxzone').textContent=ps.sessions>0?(zoneNames[ps.maxZone]||'-'):'-';
+  document.getElementById('stat-streak').textContent=ps.streak;
+  const name=(window._userData?.displayName)||(window.currentUser?.displayName)||'Voyageur';
+  document.getElementById('planet-user-name').textContent=name;
+  const n=ps.sessions;
+  document.getElementById('planet-sessions-count').textContent=
+    n===0?'premiere session':`${n} session${n>1?'s':''} traversees`;
+  const sessions=window._userData?.sessions||[];
+  if(sessions.length>0){
+    const last=sessions[sessions.length-1];
+    const d=new Date(last.date);
+    document.getElementById('planet-last-session').textContent=
+      `derniere session : ${d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'})}`;
+  }
+}
+
+window.saveSessionToFirestore=async function(sessionData){
+  if(!window.currentUser) return;
+  const {db,doc,updateDoc,arrayUnion,getDoc}=window.FB;
+  const ref=doc(db,'users',window.currentUser.uid);
+  try{
+    await updateDoc(ref,{sessions:arrayUnion(sessionData)});
+    const snap=await getDoc(ref);
+    if(snap.exists()){
+      window._userData=snap.data();
+      userPlanetState=computePlanetState(snap.data().sessions||[],window.currentUser.uid);
+    }
+  }catch(e){ console.warn('Session save error',e); }
+};
+
+window.handleGoogleLogin=async function(){
+  const {auth,gProvider,signInWithPopup}=window.FB;
+  const errEl=document.getElementById('login-err'); errEl.style.display='none';
+  try{ await signInWithPopup(auth,gProvider); }
+  catch(e){ errEl.textContent='Erreur : '+e.message; errEl.style.display='block'; }
+};
+
+window.handleAnonLogin=async function(){
+  const {auth,signInAnonymously}=window.FB;
+  try{ await signInAnonymously(auth); }
+  catch(e){ document.getElementById('login-err').textContent='Erreur : '+e.message;
+            document.getElementById('login-err').style.display='block'; }
+};
+
+window.handleSignOut=async function(){
+  const {auth,signOut}=window.FB;
+  await signOut(auth);
+  userPlanetState=null; window.currentUser=null; window._userData=null;
+  showPhase('login'); setTimeout(drawLoginPlanet,100);
+};
+
+window.handleStartFromPlanet=function(){ showPhase('intro'); };
+
+// Session tracking
+let sessionMaxZone=0, sessionIntensities=[];
+
+window.trackSessionData=function(zone,intensity){
+  if(zone>sessionMaxZone) sessionMaxZone=zone;
+  sessionIntensities.push(intensity);
+};
+
+window.finalizeSession=async function(){
+  if(!window.currentUser||sessionIntensities.length===0) return;
+  const avg=sessionIntensities.reduce((a,b)=>a+b,0)/sessionIntensities.length;
+  const sessionData={date:new Date().toISOString(),maxZone:sessionMaxZone,
+                     avgIntensity:Math.round(avg*100)/100,exchanges:S.exchanges};
+  await window.saveSessionToFirestore(sessionData);
+  sessionMaxZone=0; sessionIntensities=[];
+};
+
 setupOrbs();
 updateZoneDots();
+setTimeout(drawLoginPlanet,200);
 </script>
 
 <div id="vol-panel">
