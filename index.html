@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Entre Deux</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400&family=Cormorant:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root { --deep: #03040f; --text: #cdd6f4; --muted: rgba(205,214,244,0.45); }
@@ -32,7 +32,7 @@ body {
 #keywords-layer { position: fixed; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
 .float-word {
   position: absolute;
-  font-family: 'Playfair Display', serif; font-style: italic;
+  font-family: 'Cormorant', serif; font-style: italic;
   font-size: clamp(0.75rem, 1.5vw, 1rem);
   white-space: nowrap;
   animation: wordFloat 4s ease-out forwards;
@@ -57,7 +57,7 @@ body {
 
 /* Intro */
 .intro-title {
-  font-family: 'Playfair Display', serif; font-style: italic;
+  font-family: 'Cormorant', serif; font-style: italic;
   font-size: clamp(2rem, 5vw, 3rem); font-weight: 400; letter-spacing: 0.04em;
   background: linear-gradient(135deg, #a78bfa, #60a5fa, #f0abfc);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
@@ -79,7 +79,7 @@ body {
 #phase-chat { gap:0; height:100vh; justify-content:space-between; padding:1.5rem 2rem; }
 .chat-header { display:flex; align-items:center; justify-content:space-between; width:100%; padding-bottom:0.8rem; }
 .chat-title {
-  font-family:'Playfair Display',serif; font-style:italic; font-size:1.1rem;
+  font-family:'Cormorant',serif; font-style:italic; font-size:1.1rem;
   background:linear-gradient(135deg,#a78bfa,#60a5fa);
   -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
 }
@@ -88,7 +88,7 @@ body {
 
 /* AI text */
 #ai-text {
-  font-family:'Playfair Display',serif; font-style:italic;
+  font-family:'Cormorant',serif; font-style:italic;
   font-size:clamp(0.95rem,2.5vw,1.15rem); line-height:1.9;
   text-align:center; color:var(--text); max-width:520px; min-height:80px; transition:opacity 0.3s;
 }
@@ -160,7 +160,7 @@ textarea::placeholder { color:rgba(205,214,244,0.25); }
 /* End */
 #phase-end { gap:2rem; }
 .end-label { font-size:0.65rem; letter-spacing:0.25em; text-transform:uppercase; color:var(--muted); margin-bottom:0.8rem; text-align:center; }
-.end-poem { font-family:'Playfair Display',serif; font-style:italic; font-size:1.1rem; line-height:2; text-align:center; max-width:480px; }
+.end-poem { font-family:'Cormorant',serif; font-style:italic; font-size:1.1rem; line-height:2; text-align:center; max-width:480px; }
 #debug-msg { font-size:0.7rem; color:#ff8888; min-height:1rem; text-align:center; }
 </style>
 </head>
@@ -292,7 +292,7 @@ const state = {
   let stars = [];
   function resize() {
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    stars = Array.from({length:200}, () => ({
+    stars = Array.from({length:60}, () => ({
       x: Math.random()*canvas.width, y: Math.random()*canvas.height,
       r: Math.random()*1.3+0.2, opacity: Math.random()*0.6+0.1,
       ts: Math.random()*0.02+0.004, to: Math.random()*Math.PI*2,
@@ -320,17 +320,23 @@ function resizeCC() { constellationCanvas.width=window.innerWidth; constellation
 resizeCC(); window.addEventListener('resize', resizeCC);
 
 function spawnConstellation(color) {
-  const count = 4 + Math.floor(Math.random()*4);
+  // Cluster autour d'un point central aléatoire pour que les lignes soient visibles
+  const cx = window.innerWidth*(0.2+Math.random()*0.6);
+  const cy = window.innerHeight*(0.15+Math.random()*0.6);
+  const spread = 160;
+  const count = 5 + Math.floor(Math.random()*4);
   for (let i = 0; i < count; i++) {
+    const angle = (i/count)*Math.PI*2 + Math.random()*0.8;
+    const dist = spread*(0.3+Math.random()*0.7);
     constellationNodes.push({
-      x: window.innerWidth*(0.08+Math.random()*0.84),
-      y: window.innerHeight*(0.08+Math.random()*0.84),
-      r: Math.random()*2.2+0.8,
+      x: cx + Math.cos(angle)*dist,
+      y: cy + Math.sin(angle)*dist,
+      r: Math.random()*2.5+1.5,
       opacity: 0,
-      targetOpacity: Math.random()*0.55+0.25,
+      targetOpacity: Math.random()*0.5+0.45,
       color: color||'#a78bfa',
       born: Date.now(),
-      life: 7000+Math.random()*4000,
+      life: 8000+Math.random()*4000,
     });
   }
   if (!constellationAnimId) animateConstellation();
@@ -353,8 +359,8 @@ function animateConstellation() {
         const op = Math.min(a.opacity,b.opacity)*(1-dist/230)*0.35;
         constellationCtx.beginPath();
         constellationCtx.moveTo(a.x,a.y); constellationCtx.lineTo(b.x,b.y);
-        constellationCtx.strokeStyle = `rgba(167,139,250,${op})`;
-        constellationCtx.lineWidth = 0.6; constellationCtx.stroke();
+        constellationCtx.strokeStyle = `rgba(167,139,250,${op * 2.5})`;
+        constellationCtx.lineWidth = 1; constellationCtx.stroke();
       }
     }
   }
@@ -513,30 +519,33 @@ function setupAnalyser(audioEl) {
 // ── Voice — simultané ──────────────────────────────────
 // Lance fetch ElevenLabs et joue DÈS que le blob est prêt
 // Le typewriter démarre au même moment (appelé depuis displayAI en parallèle)
-async function speakNow(text) {
-  if (!state.voiceEnabled) return;
+function speakNow(text) {
+  if (!state.voiceEnabled) return Promise.resolve();
   stopAudio();
-  state.speaking=true;
-  try {
-    const res=await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`,{
-      method:'POST',
-      headers:{'xi-api-key':ELEVENLABS_API_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({
-        text, model_id:'eleven_multilingual_v2',
-        voice_settings:{stability:0.72,similarity_boost:0.85,style:0.3,use_speaker_boost:true}
-      })
-    });
-    if(!res.ok) throw new Error('ElevenLabs '+res.status);
-    const blob=await res.blob();
-    const url=URL.createObjectURL(blob);
-    const audio=new Audio(url);
-    audio.crossOrigin='anonymous';
-    state.currentAudio=audio;
-    setupAnalyser(audio);
-    audio.onended=()=>{URL.revokeObjectURL(url);state.speaking=false;};
-    audio.onerror=()=>{state.speaking=false;};
-    audio.play().catch(()=>{state.speaking=false;});
-  } catch(e){state.speaking=false;console.error('Voice:',e);}
+  state.speaking = true;
+  return new Promise(async (resolve) => {
+    try {
+      const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`, {
+        method: 'POST',
+        headers: { 'xi-api-key': ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text, model_id: 'eleven_multilingual_v2',
+          voice_settings: { stability: 0.72, similarity_boost: 0.85, style: 0.3, use_speaker_boost: true }
+        })
+      });
+      if (!res.ok) throw new Error('ElevenLabs ' + res.status);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.crossOrigin = 'anonymous';
+      state.currentAudio = audio;
+      setupAnalyser(audio);
+      audio.onplay = () => { resolve(); }; // texte s'affiche dès que la voix démarre
+      audio.onended = () => { URL.revokeObjectURL(url); state.speaking = false; };
+      audio.onerror = () => { state.speaking = false; resolve(); };
+      audio.play().catch(() => { state.speaking = false; resolve(); });
+    } catch(e) { state.speaking = false; console.error('Voice:', e); resolve(); }
+  });
 }
 
 function stopAudio() {
@@ -611,15 +620,14 @@ function displayAI(response) {
   const aiEl=document.getElementById('ai-text');
   aiEl.style.opacity='0';
 
-  setTimeout(()=>{
+  // 🔑 Attendre que la voix commence à jouer, puis afficher le texte en même temps
+  speakNow(response.text).then(()=>{
     aiEl.style.opacity='1';
-    // 🔑 VOIX ET TYPEWRITER EN PARALLÈLE — les deux démarrent en même temps
-    speakNow(response.text);
     typewrite('ai-text', response.text, 26, ()=>{
       document.getElementById('input-wrapper').classList.add('visible');
       document.getElementById('user-input').focus();
     });
-  }, 150);
+  });
 
   if(response.sessionEnd && response.endPoem) {
     setTimeout(()=>{
@@ -635,9 +643,10 @@ async function handleSubmit() {
   const answer=input.value.trim();
   if(!answer) return;
 
-  // Effets visuels immédiats sur la réponse du joueur
-  const words=answer.split(/\s+/).filter(w=>w.length>3).slice(0,5);
-  spawnKeywords(words, hexToRgba(state.orbColor, 0.8));
+  // Mots essentiels de la réponse du joueur (on garde les plus longs = plus significatifs)
+  const stopWords = new Set(['que','qui','les','des','une','dans','pour','pas','avec','sur','par','mais','donc','elle','lui','moi','toi','soi','cela','rien','tout','bien','plus','très','aussi','encore','quand','comme','même','avoir','être','faire','dire','voir','aller','vouloir','pouvoir','savoir']);
+  const words=answer.split(/[\s,.'!?;:]+/).filter(w=>w.length>4 && !stopWords.has(w.toLowerCase())).slice(0,4);
+  if(words.length) spawnKeywords(words, hexToRgba(state.orbColor, 0.85));
   spawnConstellation(state.orbColor);
 
   input.value='';
@@ -649,7 +658,9 @@ async function handleSubmit() {
     const response=await callGroq(answer);
     // Effets visuels avec les keywords de l'IA
     if(response.keywords && response.keywords.length) {
-      spawnKeywords(response.keywords, hexToRgba(response.orbColor||state.orbColor, 0.75));
+      // Garder seulement les 4 mots les plus courts/essentiels
+      const kw = response.keywords.filter(w=>w.length>=3).slice(0,4);
+      if(kw.length) spawnKeywords(kw, hexToRgba(response.orbColor||state.orbColor, 0.85));
       spawnConstellation(response.orbColor||state.orbColor);
     }
     showLoading(false);
