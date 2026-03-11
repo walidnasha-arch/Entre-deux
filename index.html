@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Entre Deux</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400&family=Cormorant:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Cinzel:wght@300;400&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root { --deep: #03040f; --text: #cdd6f4; --muted: rgba(205,214,244,0.45); }
@@ -57,11 +57,12 @@ body {
 
 /* Intro */
 .intro-title {
-  font-family: 'Cormorant', serif; font-style: italic;
-  font-size: clamp(2rem, 5vw, 3rem); font-weight: 400; letter-spacing: 0.04em;
-  background: linear-gradient(135deg, #a78bfa, #60a5fa, #f0abfc);
+  font-family: 'Cinzel', serif; font-style: normal; font-weight: 300;
+  font-size: clamp(2.6rem, 6vw, 4rem); letter-spacing: 0.22em; text-transform: uppercase;
+  background: linear-gradient(160deg, #e8d5b0 0%, #f5e6c8 30%, #c8a96e 60%, #e8d5b0 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  margin-bottom: 0.6rem; text-align: center;
+  margin-bottom: 0.8rem; text-align: center;
+  filter: drop-shadow(0 0 20px rgba(200,169,110,0.3));
 }
 .intro-sub { font-size:0.85rem; color:var(--muted); letter-spacing:0.18em; text-transform:uppercase; margin-bottom:3rem; text-align:center; }
 .intro-desc { font-size:1rem; line-height:1.9; color:var(--muted); text-align:center; max-width:420px; margin-bottom:2.5rem; }
@@ -79,8 +80,9 @@ body {
 #phase-chat { gap:0; height:100vh; justify-content:space-between; padding:1.5rem 2rem; }
 .chat-header { display:flex; align-items:center; justify-content:space-between; width:100%; padding-bottom:0.8rem; }
 .chat-title {
-  font-family:'Cormorant',serif; font-style:italic; font-size:1.1rem;
-  background:linear-gradient(135deg,#a78bfa,#60a5fa);
+  font-family:'Cinzel',serif; font-style:normal; font-size:0.9rem; font-weight:300;
+  letter-spacing:0.2em; text-transform:uppercase;
+  background:linear-gradient(160deg,#e8d5b0,#c8a96e);
   -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
 }
 .session-info { font-size:0.65rem; color:var(--muted); letter-spacing:0.15em; text-transform:uppercase; }
@@ -240,6 +242,36 @@ textarea::placeholder { color:rgba(205,214,244,0.25); }
 const ELEVENLABS_API_KEY = "sk_c2579767ed59597719c1443558d3bf3f3d81dae1ffa5aa71";
 const ELEVENLABS_VOICE_ID = "aeJQpeFdejK7z1xAJ7Hy";
 const GROQ_API_KEY = "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";
+// ── Music ──────────────────────────────────────────────
+let bgMusic = null;
+function startMusic() {
+  if (bgMusic) return;
+  bgMusic = new Audio('music.mp3');
+  bgMusic.loop = true;
+  bgMusic.volume = 0;
+  bgMusic.play().catch(()=>{});
+  // Fade in over 3s
+  let vol = 0;
+  const fade = setInterval(()=>{
+    vol = Math.min(vol + 0.01, 0.22);
+    bgMusic.volume = vol;
+    if (vol >= 0.22) clearInterval(fade);
+  }, 100);
+}
+
+// ── Expressiveness — enrichit le texte pour ElevenLabs ─
+function makeExpressive(text) {
+  // Ajoute de la ponctuation expressive pour guider la voix
+  return text
+    .replace(/\.\.\./g, '…')
+    .replace(/([Cc]'est beau)\./g, '$1 !')
+    .replace(/([Tt]u n'es pas seul[e]?)\./g, '$1.')
+    .replace(/([Cc]a va aller)\./g, '$1 !')
+    .replace(/([Bb]ravo|[Cc]ourage|[Mm]erci)/g, '$1 !')
+    .replace(/([Qq]uoi)\s*\?/g, '$1 ?!')
+    .trim();
+}
+
 
 const SYSTEM_PROMPT = `Tu es une présence bienveillante dans une application de bien-être émotionnel appelée "Entre Deux".
 Tu accompagnes la personne dans l'exploration de ses émotions avec douceur, profondeur et une vraie présence humaine.
@@ -432,307 +464,89 @@ function initOrb(id, size) {
 
 function drawOrb(o, t, intensity, color, speaking) {
   if (!o) return;
-  const {ctx,size} = o;
-  const cx=size/2, cy=size/2, r=size*0.38;
-  ctx.clearRect(0,0,size,size);
-  const hex=color.replace('#','');
-  const ri=parseInt(hex.substr(0,2),16), gi=parseInt(hex.substr(2,2),16), bi=parseInt(hex.substr(4,2),16);
+  const { ctx, size } = o;
+  const cx = size / 2, cy = size / 2, r = size * 0.36;
+  ctx.clearRect(0, 0, size, size);
 
-  let audioLevel = 0;
-  if (analyserDataArray && speaking && state.analyser) {
-    state.analyser.getByteFrequencyData(analyserDataArray);
-    let sum=0; for(let k=0;k<analyserDataArray.length;k++) sum+=analyserDataArray[k];
-    audioLevel=(sum/analyserDataArray.length)/255;
+  const hex = color.replace('#','');
+  const ri = parseInt(hex.substr(0,2),16);
+  const gi = parseInt(hex.substr(2,2),16);
+  const bi = parseInt(hex.substr(4,2),16);
+
+  // Get audio data
+  let freqData = null;
+  if (analyserDataArray && state.analyser) {
+    state.analyser.getByteTimeDomainData(analyserDataArray);
+    freqData = analyserDataArray;
   }
 
-  const bw = 0.055+intensity*0.075+audioLevel*0.16;
-  ctx.save(); ctx.translate(cx,cy);
+  // Outer soft glow
+  const glow = ctx.createRadialGradient(cx, cy, r * 0.6, cx, cy, r * 1.8);
+  glow.addColorStop(0, `rgba(${ri},${gi},${bi},0.12)`);
+  glow.addColorStop(1, `rgba(${ri},${gi},${bi},0)`);
+  ctx.beginPath(); ctx.arc(cx, cy, r * 1.8, 0, Math.PI * 2);
+  ctx.fillStyle = glow; ctx.fill();
 
-  // Glow layers
-  for (let l=3;l>=0;l--) {
-    const lr=r+l*13+audioLevel*18;
-    const alpha=(0.055-l*0.011)*(1+audioLevel*2.5);
-    const g=ctx.createRadialGradient(0,0,lr*0.4,0,0,lr);
-    g.addColorStop(0,`rgba(${ri},${gi},${bi},${alpha*2})`);
-    g.addColorStop(1,`rgba(${ri},${gi},${bi},0)`);
-    ctx.beginPath(); ctx.arc(0,0,lr,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
-  }
+  // Clean circle border
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(${ri},${gi},${bi},0.55)`;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
 
-  // Wavy body
-  const pts=72;
+  // Inner fill (very subtle)
+  const innerFill = ctx.createRadialGradient(cx - r*0.2, cy - r*0.2, 0, cx, cy, r);
+  innerFill.addColorStop(0, `rgba(${ri},${gi},${bi},0.08)`);
+  innerFill.addColorStop(1, `rgba(${ri},${gi},${bi},0.02)`);
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = innerFill; ctx.fill();
+
+  // Waveform inside the circle
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cx, cy, r - 2, 0, Math.PI * 2);
+  ctx.clip();
+
+  const waveH = r * 0.7; // max wave height
+  const pts = freqData ? freqData.length : 64;
+
   ctx.beginPath();
-  for (let i=0;i<=pts;i++) {
-    const a=(i/pts)*Math.PI*2;
-    const rad=r*(
-      1+Math.sin(a*3+t*0.9)*bw
-       +Math.sin(a*5-t*0.55)*bw*0.55
-       +Math.sin(a*7+t*1.2)*bw*0.28
-       +(speaking?Math.sin(a*9+t*5)*audioLevel*0.1:0)
-    );
-    i===0?ctx.moveTo(Math.cos(a)*rad,Math.sin(a)*rad):ctx.lineTo(Math.cos(a)*rad,Math.sin(a)*rad);
+  for (let i = 0; i <= pts; i++) {
+    const x = cx - r + (i / pts) * r * 2;
+    let y = cy;
+    if (freqData && speaking) {
+      const v = (freqData[i % freqData.length] / 128.0) - 1.0;
+      y = cy + v * waveH;
+    } else {
+      // Idle: gentle sine
+      y = cy + Math.sin(i * 0.18 + t * 2.5) * waveH * (0.06 + intensity * 0.08);
+    }
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   }
-  ctx.closePath();
 
-  const fill=ctx.createRadialGradient(-r*0.3,-r*0.3,0,0,0,r*1.2);
-  fill.addColorStop(0,`rgba(${Math.min(ri+90,255)},${Math.min(gi+90,255)},${Math.min(bi+90,255)},0.92)`);
-  fill.addColorStop(0.45,`rgba(${ri},${gi},${bi},0.72)`);
-  fill.addColorStop(0.85,`rgba(${Math.max(ri-50,0)},${Math.max(gi-50,0)},${Math.max(bi-50,0)},0.38)`);
-  fill.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=fill; ctx.fill();
-
-  // Shimmer
-  const sh=ctx.createRadialGradient(-r*0.4,-r*0.45,0,-r*0.15,-r*0.15,r*0.5);
-  sh.addColorStop(0,`rgba(255,255,255,${0.22+audioLevel*0.12})`);
-  sh.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.fillStyle=sh; ctx.fill();
+  const waveGrad = ctx.createLinearGradient(cx - r, 0, cx + r, 0);
+  waveGrad.addColorStop(0,   `rgba(${ri},${gi},${bi},0)`);
+  waveGrad.addColorStop(0.2, `rgba(${ri},${gi},${bi},0.8)`);
+  waveGrad.addColorStop(0.8, `rgba(${ri},${gi},${bi},0.8)`);
+  waveGrad.addColorStop(1,   `rgba(${ri},${gi},${bi},0)`);
+  ctx.strokeStyle = waveGrad;
+  ctx.lineWidth = speaking ? 2 : 1.2;
+  ctx.stroke();
   ctx.restore();
 }
 
+
+
 function setupOrbs() {
-  orbIntro=initOrb('orb-canvas-intro',200);
-  orbChat=initOrb('orb-canvas-chat',130);
-  orbEnd=initOrb('orb-canvas-end',200);
+  orbIntro = initOrb('orb-canvas-intro', 200);
+  orbChat  = initOrb('orb-canvas-chat', 130);
+  orbEnd   = initOrb('orb-canvas-end', 200);
   function loop() {
-    orbT+=0.016;
-    drawOrb(orbIntro,orbT,0.28,'#7b4fd4',false);
-    drawOrb(orbChat,orbT,state.intensity,state.orbColor,state.speaking);
-    drawOrb(orbEnd,orbT,0.18,'#50d4a0',false);
+    orbT += 0.016;
+    drawOrb(orbIntro, orbT, 0.28, '#7b4fd4', false);
+    drawOrb(orbChat,  orbT, state.intensity, state.orbColor, state.speaking);
+    drawOrb(orbEnd,   orbT, 0.18, '#50d4a0', false);
     requestAnimationFrame(loop);
   }
   loop();
 }
 
-// ── Audio analyser ─────────────────────────────────────
-function setupAnalyser(audioEl) {
-  try {
-    if (!state.audioCtx) state.audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-    if (state.audioSource) { try{state.audioSource.disconnect();}catch(e){} }
-    state.analyser=state.audioCtx.createAnalyser();
-    state.analyser.fftSize=64;
-    analyserDataArray=new Uint8Array(state.analyser.frequencyBinCount);
-    state.audioSource=state.audioCtx.createMediaElementSource(audioEl);
-    state.audioSource.connect(state.analyser);
-    state.analyser.connect(state.audioCtx.destination);
-  } catch(e){console.warn('Analyser:',e);}
-}
 
-// ── Voice — simultané ──────────────────────────────────
-// Lance fetch ElevenLabs et joue DÈS que le blob est prêt
-// Le typewriter démarre au même moment (appelé depuis displayAI en parallèle)
-function speakNow(text) {
-  if (!state.voiceEnabled) return Promise.resolve();
-  stopAudio();
-  state.speaking = true;
-  return new Promise(async (resolve) => {
-    try {
-      const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`, {
-        method: 'POST',
-        headers: { 'xi-api-key': ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text, model_id: 'eleven_multilingual_v2',
-          voice_settings: { stability: 0.72, similarity_boost: 0.85, style: 0.3, use_speaker_boost: true }
-        })
-      });
-      if (!res.ok) throw new Error('ElevenLabs ' + res.status);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.crossOrigin = 'anonymous';
-      state.currentAudio = audio;
-      setupAnalyser(audio);
-      audio.onplay = () => { resolve(); }; // texte s'affiche dès que la voix démarre
-      audio.onended = () => { URL.revokeObjectURL(url); state.speaking = false; };
-      audio.onerror = () => { state.speaking = false; resolve(); };
-      audio.play().catch(() => { state.speaking = false; resolve(); });
-    } catch(e) { state.speaking = false; console.error('Voice:', e); resolve(); }
-  });
-}
-
-function stopAudio() {
-  if(state.currentAudio){state.currentAudio.pause();state.currentAudio=null;}
-  state.speaking=false;
-}
-
-async function testSound() {
-  const dbg=document.getElementById('debug-msg');
-  dbg.textContent='Connexion à ElevenLabs...';
-  await speakNow('Je suis là. Comment tu vas ce soir ?');
-  dbg.textContent='✓ Son OK !';
-  setTimeout(()=>dbg.textContent='',3000);
-}
-
-function toggleVoice() {
-  state.voiceEnabled=!state.voiceEnabled;
-  const btn=document.getElementById('voice-btn');
-  btn.textContent=state.voiceEnabled?'◉ voix':'○ voix';
-  btn.classList.toggle('active',state.voiceEnabled);
-  if(!state.voiceEnabled) stopAudio();
-}
-
-// ── Typewriter ─────────────────────────────────────────
-function typewrite(elementId, text, speed, onDone) {
-  const el=document.getElementById(elementId);
-  el.innerHTML=''; let i=0; const spd=speed||25;
-  const iv=setInterval(()=>{
-    el.innerHTML=text.slice(0,i+1)+'<span class="cursor"></span>';
-    i++;
-    if(i>=text.length){clearInterval(iv);el.innerHTML=text;if(onDone)onDone();}
-  },spd);
-}
-
-// ── Phases ─────────────────────────────────────────────
-function showPhase(name) {
-  document.querySelectorAll('.phase').forEach(p=>p.classList.remove('active'));
-  document.getElementById('phase-'+name).classList.add('active');
-}
-
-// ── Groq ───────────────────────────────────────────────
-async function callGroq(userMessage) {
-  const messages=[
-    {role:'system',content:SYSTEM_PROMPT},
-    ...state.history,
-    {role:'user',content:userMessage}
-  ];
-  const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':`Bearer ${GROQ_API_KEY}`},
-    body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:500,temperature:0.85,messages})
-  });
-  if(!res.ok) throw new Error('Groq '+res.status+': '+await res.text());
-  const data=await res.json();
-  const raw=data.choices[0].message.content;
-  const match=raw.match(/\{[\s\S]*\}/);
-  if(!match) throw new Error('JSON invalide: '+raw.slice(0,150));
-  const parsed=JSON.parse(match[0]);
-  state.history.push({role:'user',content:userMessage},{role:'assistant',content:raw});
-  return parsed;
-}
-
-// ── Display AI response ────────────────────────────────
-function displayAI(response) {
-  if(response.orbColor) state.orbColor=response.orbColor;
-  if(response.intensity!=null) state.intensity=response.intensity;
-  if(response.emotion) document.getElementById('emotion-label').textContent=response.emotion;
-  state.exchangeCount++;
-  document.getElementById('session-info').textContent=`moment ${state.exchangeCount}`;
-  if(response.readyHint) document.getElementById('btn-ready').classList.add('visible');
-
-  const aiEl=document.getElementById('ai-text');
-  aiEl.style.opacity='0';
-
-  // 🔑 Attendre que la voix commence à jouer, puis afficher le texte en même temps
-  speakNow(response.text).then(()=>{
-    aiEl.style.opacity='1';
-    typewrite('ai-text', response.text, 26, ()=>{
-      document.getElementById('input-wrapper').classList.add('visible');
-      document.getElementById('user-input').focus();
-    });
-  });
-
-  if(response.sessionEnd && response.endPoem) {
-    setTimeout(()=>{
-      document.getElementById('end-poem').textContent=response.endPoem;
-      showPhase('end');
-    }, response.text.length*26+5000);
-  }
-}
-
-// ── Submit — avec effets visuels ───────────────────────
-async function handleSubmit() {
-  const input=document.getElementById('user-input');
-  const answer=input.value.trim();
-  if(!answer) return;
-
-  // Mots essentiels de la réponse du joueur (on garde les plus longs = plus significatifs)
-  const stopWords = new Set(['que','qui','les','des','une','dans','pour','pas','avec','sur','par','mais','donc','elle','lui','moi','toi','soi','cela','rien','tout','bien','plus','très','aussi','encore','quand','comme','même','avoir','être','faire','dire','voir','aller','vouloir','pouvoir','savoir']);
-  const words=answer.split(/[\s,.'!?;:]+/).filter(w=>w.length>4 && !stopWords.has(w.toLowerCase())).slice(0,4);
-  if(words.length) spawnKeywords(words, hexToRgba(state.orbColor, 0.85));
-  spawnConstellation(state.orbColor);
-
-  input.value='';
-  document.getElementById('input-wrapper').classList.remove('visible');
-  document.getElementById('btn-ready').classList.remove('visible');
-  stopAudio(); showLoading(true);
-
-  try {
-    const response=await callGroq(answer);
-    // Effets visuels avec les keywords de l'IA
-    if(response.keywords && response.keywords.length) {
-      // Garder seulement les 4 mots les plus courts/essentiels
-      const kw = response.keywords.filter(w=>w.length>=3).slice(0,4);
-      if(kw.length) spawnKeywords(kw, hexToRgba(response.orbColor||state.orbColor, 0.85));
-      spawnConstellation(response.orbColor||state.orbColor);
-    }
-    showLoading(false);
-    displayAI(response);
-  } catch(e) {
-    showLoading(false); showError(e.message);
-    document.getElementById('input-wrapper').classList.add('visible');
-  }
-}
-
-async function handleReady() {
-  document.getElementById('input-wrapper').classList.remove('visible');
-  document.getElementById('btn-ready').classList.remove('visible');
-  stopAudio(); showLoading(true);
-  try {
-    const response=await callGroq("Je suis prêt·e à explorer autre chose.");
-    showLoading(false); displayAI(response);
-  } catch(e) {
-    showLoading(false); showError(e.message);
-    document.getElementById('input-wrapper').classList.add('visible');
-  }
-}
-
-async function handleStart() {
-  try {
-    if(!state.audioCtx) state.audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-    await state.audioCtx.resume();
-  } catch(e){}
-  showPhase('chat'); showLoading(true);
-  try {
-    const response=await callGroq("Bonjour. Je viens d'arriver. C'est ma première fois ici.");
-    showLoading(false); displayAI(response);
-  } catch(e){showLoading(false);showError(e.message);}
-}
-
-function handleRestart() {
-  state.history=[]; state.exchangeCount=0;
-  state.orbColor='#7b4fd4'; state.intensity=0.3; state.speaking=false;
-  stopAudio();
-  constellationNodes.length=0;
-  constellationCtx.clearRect(0,0,constellationCanvas.width,constellationCanvas.height);
-  document.getElementById('btn-ready').classList.remove('visible');
-  document.getElementById('input-wrapper').classList.remove('visible');
-  document.getElementById('ai-text').innerHTML='';
-  document.getElementById('emotion-label').textContent='présence';
-  document.getElementById('session-info').textContent='moment 1';
-  showPhase('intro');
-}
-
-function showLoading(v) {
-  document.getElementById('loading').classList.toggle('visible',v);
-  document.getElementById('ai-text').style.opacity=v?'0':'1';
-}
-
-function showError(msg) {
-  const el=document.getElementById('ai-text');
-  el.style.opacity='1';
-  el.innerHTML=`<span style="color:#ff8888;font-family:Outfit,sans-serif;font-size:0.82rem;font-style:normal">Erreur : ${msg}</span>`;
-}
-
-// ── Keyboard ───────────────────────────────────────────
-document.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&!e.shiftKey) {
-    if(document.getElementById('phase-chat').classList.contains('active')&&
-       document.getElementById('input-wrapper').classList.contains('visible')) {
-      e.preventDefault(); handleSubmit();
-    }
-  }
-});
-
-// ── Init ───────────────────────────────────────────────
-setupOrbs();
-</script>
-</body>
-</html>
