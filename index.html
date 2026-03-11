@@ -1023,7 +1023,7 @@ async function callGroq(msg){
   const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
-    body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:800,temperature:.85,messages})
+    body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:800,temperature:.85,messages,response_format:{type:'json_object'}})
   });
   if(!res.ok) throw new Error('Groq '+res.status+': '+await res.text());
   const data=await res.json();
