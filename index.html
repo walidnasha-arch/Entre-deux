@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Entre Deux</title>
+<title>Between Two</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Crimson+Pro:ital@0;1&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -262,9 +262,9 @@ display: none;
 
 <div class="vignette"></div>
 
-<button id="voice-btn" class="active" onclick="toggleVoice()">◉ voix</button>
+<button id="voice-btn" class="active" onclick="toggleVoice()">◉ voice</button>
 
-<div id="layer-indicator">couche <span id="layer-num">0</span></div>
+<div id="layer-indicator">layer <span id="layer-num">0</span></div>
 <div id="atmosphere-label">brume</div>
 
 <div id="app">
@@ -272,15 +272,15 @@ display: none;
   <!-- INTRO -->
 
   <div class="phase active" id="phase-intro">
-    <div class="label">entre deux</div>
+    <div class="label">between two</div>
     <p class="main-text" style="text-align:center; font-size:1.15rem; opacity:0.8; margin-bottom:1.5rem">
-      Il existe un endroit que personne ne peut te montrer.
+      There is a place no one can show you.
     </p>
     <p class="main-text" style="text-align:center; font-size:1rem; opacity:0.5; font-style:italic; margin-bottom:3rem">
-      Un jeu pour ceux qui osent regarder leurs propres rêves.
+      A game for those who dare to look at their own dreams.
     </p>
     <button class="btn" onclick="handleStart()">Entrer</button>
-    <p style="font-size:0.6rem; opacity:0.25; margin-top:1.5rem; letter-spacing:0.1em">assure-toi que ton volume est activé</p>
+    <p style="font-size:0.6rem; opacity:0.25; margin-top:1.5rem; letter-spacing:0.1em">make sure your volume is on</p>
     <p id="debug-msg" style="font-size:0.65rem; color:#ff8888; margin-top:1rem; min-height:1.2rem"></p>
     <button class="btn" style="margin-top:1rem; font-size:0.7rem; opacity:0.6" onclick="testSound()">🔊 Tester le son</button>
   </div>
@@ -291,28 +291,28 @@ display: none;
     <div class="main-text" id="narration-text"></div>
     <div class="question-text" id="question-text"></div>
     <div id="input-area" style="display:none">
-      <textarea id="user-input" rows="3" placeholder="écris ta réponse ici..."></textarea>
+      <textarea id="user-input" rows="3" placeholder="write your answer here..."></textarea>
       <div class="submit-row">
-        <button class="btn" id="submit-btn" onclick="handleSubmit()">continuer →</button>
+        <button class="btn" id="submit-btn" onclick="handleSubmit()">continue →</button>
       </div>
     </div>
-    <div id="loading-text" style="display:none; opacity:0.4; font-style:italic; font-size:0.9rem">le rêve se tisse...</div>
+    <div id="loading-text" style="display:none; opacity:0.4; font-style:italic; font-size:0.9rem">the dream is weaving...</div>
   </div>
 
   <!-- CHECKPOINT -->
 
   <div class="phase" id="phase-checkpoint">
-    <div class="label" id="checkpoint-msg">Tu peux t'arrêter ici.</div>
-    <div class="main-text" style="text-align:center" id="layer-display">Tu es à la couche 1.</div>
+    <div class="label" id="checkpoint-msg">You can stop here.</div>
+    <div class="main-text" style="text-align:center" id="layer-display">Tu es à la layer 1.</div>
     <div class="sub-text" id="checkpoint-sub"></div>
     <div class="btn-row">
       <div class="btn-col">
-        <button class="btn" onclick="handleSave()">S'arrêter ici</button>
-        <span class="btn-hint">garder la progression</span>
+        <button class="btn" onclick="handleSave()">Stop here</button>
+        <span class="btn-hint">keep progress</span>
       </div>
       <div class="btn-col">
-        <button class="btn" onclick="handleContinue()">Aller plus loin</button>
-        <span class="btn-hint">risque de tout perdre</span>
+        <button class="btn" onclick="handleContinue()">Go deeper</button>
+        <span class="btn-hint">risk losing everything</span>
       </div>
     </div>
   </div>
@@ -323,8 +323,8 @@ display: none;
     <div class="main-text" style="text-align:center; margin-bottom:1.5rem" id="risk-msg"></div>
     <div class="sub-text" id="risk-sub"></div>
     <div class="btn-row">
-      <button class="btn" onclick="showPhase('checkpoint')">← reculer</button>
-      <button class="btn" style="color:var(--glow)" onclick="handleRisk()">Je veux voir →</button>
+      <button class="btn" onclick="showPhase('checkpoint')">← go back</button>
+      <button class="btn" style="color:var(--glow)" onclick="handleRisk()">I want to see →</button>
     </div>
   </div>
 
@@ -332,48 +332,48 @@ display: none;
 
   <div class="phase" id="phase-lost">
     <div class="big-symbol">∅</div>
-    <div class="main-text" style="text-align:center; opacity:0.7">Le rêve s'est refermé sur lui-même.</div>
+    <div class="main-text" style="text-align:center; opacity:0.7">The dream folded back on itself.</div>
     <div class="sub-text" id="lost-sub"></div>
-    <div class="sub-text" style="font-style:italic; opacity:0.3">"Certaines choses ne se retrouvent pas.<br>C'est peut-être pour ça qu'elles comptent."</div>
-    <button class="btn" onclick="handleRestart()">Recommencer</button>
+    <div class="sub-text" style="font-style:italic; opacity:0.3">"Some things cannot be found again.<br>Perhaps that is why they matter."</div>
+    <button class="btn" onclick="handleRestart()">Start over</button>
   </div>
 
   <!-- SAVED -->
 
   <div class="phase" id="phase-saved">
     <div class="big-symbol">◇</div>
-    <div class="main-text" style="text-align:center; opacity:0.8">Tu as choisi de garder ce que tu as trouvé.</div>
+    <div class="main-text" style="text-align:center; opacity:0.8">You chose to keep what you found.</div>
     <div class="sub-text" id="saved-sub"></div>
-    <div class="sub-text" style="font-style:italic; opacity:0.3">"C'est courageux aussi, de savoir quand s'arrêter."</div>
-    <button class="btn" onclick="handleRestart()">Une nouvelle nuit</button>
+    <div class="sub-text" style="font-style:italic; opacity:0.3">"It takes courage too, to know when to stop."</div>
+    <button class="btn" onclick="handleRestart()">A new night</button>
   </div>
 
 </div>
 
 <script>
 const ELEVENLABS_API_KEY = "sk_c2579767ed59597719c1443558d3bf3f3d81dae1ffa5aa71";
-const ELEVENLABS_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"; // Rachel
+const ELEVENLABS_VOICE_ID = "aeJQpeFdejK7z1xAJ7Hy"; // Ta voix clonée
 const CLAUDE_API_KEY = ""; // Laisse vide — on utilise l'API Claude via le proxy
 
-const SYSTEM_PROMPT = `Tu es la voix narrative d'un jeu onirique poétique appelé "Entre Deux". 
-Tu es une présence féminine, douce, mélancolique et mystérieuse.
+const SYSTEM_PROMPT = `You are the narrative voice of a poetic dream game called "Between Two". 
+You are a feminine presence, soft, melancholic and mysterious — a guide, a stranger, perhaps a fragment of the player's own soul.
 
-Le joueur explore des couches de rêve de plus en plus profondes. Tu génères des scènes oniriques poétiques basées sur ses réponses.
+The player explores deeper and deeper layers of a dream world. Generate poetic dream scenes based on their answers.
 
-Règles absolues :
-- Toujours en français
-- Maximum 3 phrases par narration
-- Ton : mélancolique, poétique
-- Une seule question intime par scène
-- Intègre ce que le joueur a dit
+Absolute rules:
+- Always in English
+- Maximum 3 sentences per narration
+- Tone: melancholic, poetic, never explanatory
+- One single intimate question per scene
+- Weave what the player said into the next scene
 
-Réponds UNIQUEMENT en JSON valide, sans markdown :
-{"narration":"texte poétique","question":"question intime","atmosphere":"un mot: brume/cristal/cendre/velours/abîme/aurore"}`;
+Respond ONLY in valid JSON, no markdown, no extra text:
+{"narration":"poetic text here","question":"intimate question here","atmosphere":"one word: mist/crystal/ash/velvet/abyss/aurora"}`;
 
 const INTRO_SCENE = {
-  narration: "Il y a un endroit entre le sommeil et l'éveil. Un couloir sans portes, une lumière qui ne vient de nulle part. Tu es là depuis toujours, ou peut-être depuis une seconde.",
-  question: "Qu'est-ce que tu laisses derrière toi, ce soir, en fermant les yeux ?",
-  atmosphere: "brume"
+  narration: "There is a place between sleeping and waking. A corridor without doors, a light that comes from nowhere. You have been here forever, or perhaps for just one second.",
+  question: "What are you leaving behind tonight, as you close your eyes?",
+  atmosphere: "mist"
 };
 
 const ATMOSPHERES = {
@@ -477,7 +477,7 @@ function stopAudio() {
 
 async function testSound() {
   const dbg = document.getElementById('debug-msg');
-  dbg.textContent = "Connexion à ElevenLabs...";
+  dbg.textContent = "Connecting to ElevenLabs...";
   try {
     const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`, {
       method: "POST",
@@ -509,7 +509,7 @@ async function testSound() {
 function toggleVoice() {
   state.voiceEnabled = !state.voiceEnabled;
   const btn = document.getElementById('voice-btn');
-  btn.textContent = state.voiceEnabled ? "◉ voix" : "○ voix";
+  btn.textContent = state.voiceEnabled ? "◉ voice" : "○ voice";
   btn.classList.toggle('active', state.voiceEnabled);
   if (!state.voiceEnabled) stopAudio();
 }
@@ -550,12 +550,18 @@ function showPhase(name) {
 async function callClaude(userAnswer) {
   const messages = [
     ...state.history,
-    { role: "user", content: `Couche ${state.layer + 1}, atmosphère: ${state.atmosphere}. Réponse du joueur: "${userAnswer}". Génère la prochaine scène en JSON.` }
+    { role: "user", content: `Layer ${state.layer + 1}, atmosphère: ${state.atmosphere}. Réponse du joueur: "${userAnswer}". Génère la prochaine scène en JSON.` }
   ];
 
+  const ANTHROPIC_KEY = "sk-ant-api03-REPLACE_WITH_YOUR_ANTHROPIC_KEY";
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      "x-api-key": ANTHROPIC_KEY,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 1000,
@@ -649,15 +655,15 @@ async function handleSubmit() {
 
 function showCheckpoint() {
   const msgs = [
-    "Tu peux t'arrêter ici. Ce que tu as vécu restera.",
+    "You can stop here. Ce que tu as vécu restera.",
     "Le rêve peut attendre. Toi, tu n'as pas à tout traverser ce soir.",
     "Je garderai cet endroit pour toi. Si tu veux revenir.",
   ];
   document.getElementById('checkpoint-msg').textContent = msgs[state.layer % msgs.length];
-  document.getElementById('layer-display').textContent = `Tu es à la couche ${state.layer}.`;
+  document.getElementById('layer-display').textContent = `Tu es à la layer ${state.layer}.`;
   document.getElementById('checkpoint-sub').textContent = state.layer < 3
-    ? "Les récompenses du rêve profond sont encore devant toi."
-    : `Tu as traversé ${state.layer} couches. Ce que tu rapportes vaut quelque chose.`;
+    ? "The rewards of the deep dream are still ahead."
+    : `You have crossed ${state.layer} layers. What you bring back is worth something.`;
   showPhase('checkpoint');
 }
 
@@ -669,21 +675,21 @@ function handleContinue() {
   ];
   document.getElementById('risk-msg').textContent = riskMsgs[state.layer % riskMsgs.length];
   document.getElementById('risk-sub').textContent = state.checkpointLayer > 0
-    ? `Si le rêve se brise, tu repars de zéro. Ton dernier checkpoint était à la couche ${state.checkpointLayer}.`
-    : "Si le rêve se brise, tu repars de zéro.";
+    ? `If the dream breaks, you start over. Ton dernier checkpoint était à la layer ${state.checkpointLayer}.`
+    : "If the dream breaks, you start over.";
   showPhase('risk');
 }
 
 function handleSave() {
   state.checkpointLayer = state.layer;
-  document.getElementById('saved-sub').textContent = `Couche ${state.layer} sauvegardée. La prochaine fois, tu commenceras avec moins de récompenses — mais quelque chose de réel.`;
+  document.getElementById('saved-sub').textContent = `Layer ${state.layer} saved. Next time, you will start with fewer rewards — but something real.`;
   showPhase('saved');
 }
 
 function handleRisk() {
   const lostChance = 0.3 + state.layer * 0.05;
   if (Math.random() < lostChance) {
-    document.getElementById('lost-sub').textContent = `Tu avais atteint la couche ${state.layer}.${state.checkpointLayer > 0 ? ` Ta dernière sauvegarde : couche ${state.checkpointLayer}.` : ''}`;
+    document.getElementById('lost-sub').textContent = `Tu avais atteint la layer ${state.layer}.${state.checkpointLayer > 0 ? ` Ta dernière sauvegarde : layer ${state.checkpointLayer}.` : ''}`;
     showPhase('lost');
   } else {
     showPhase('playing');
