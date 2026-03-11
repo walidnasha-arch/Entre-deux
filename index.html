@@ -183,6 +183,31 @@ textarea::placeholder { color:rgba(212,216,240,.22); }
 .end-lbl { font-size:.62rem; letter-spacing:.26em; text-transform:uppercase; color:var(--muted); margin-bottom:.7rem; text-align:center; }
 .end-poem { font-family:'Cormorant',serif; font-style:italic; font-weight:300; font-size:1.15rem; line-height:2.1; text-align:center; max-width:460px; }
 #debug-msg { font-size:.68rem; color:#ff8888; min-height:1rem; text-align:center; margin-top:.5rem; }
+
+/* ── Volume panel ── */
+#vol-panel {
+  position:fixed; bottom:1.2rem; right:1.4rem; z-index:10;
+  display:flex; flex-direction:column; gap:.6rem; align-items:flex-end;
+}
+.vol-row {
+  display:flex; align-items:center; gap:.6rem;
+  background:rgba(10,12,30,.75); border:1px solid rgba(160,180,255,.12);
+  border-radius:20px; padding:.3rem .8rem; backdrop-filter:blur(12px);
+}
+.vol-icon { font-size:.7rem; color:var(--muted); width:14px; text-align:center; }
+input[type=range].vol-slider {
+  -webkit-appearance:none; appearance:none;
+  width:80px; height:3px; border-radius:2px; outline:none; cursor:pointer;
+  background:linear-gradient(to right, rgba(196,168,255,.7) 0%, rgba(196,168,255,.7) var(--val,50%), rgba(255,255,255,.12) var(--val,50%), rgba(255,255,255,.12) 100%);
+}
+input[type=range].vol-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; width:12px; height:12px; border-radius:50%;
+  background:#c4a8ff; cursor:pointer; box-shadow:0 0 6px rgba(196,168,255,.5);
+}
+input[type=range].vol-slider::-moz-range-thumb {
+  width:12px; height:12px; border-radius:50%; background:#c4a8ff;
+  border:none; cursor:pointer;
+}
 </style>
 </head>
 <body>
@@ -275,27 +300,38 @@ function makeExpressive(text) {
 }
 
 // ── System prompt ──────────────────────────────────────
-const SYSTEM_PROMPT = `Tu es une présence bienveillante dans "Entre Deux", une app de bien-être émotionnel.
-Tu accompagnes la personne dans l'exploration de ses émotions avec douceur, profondeur et une vraie chaleur humaine.
+const SYSTEM_PROMPT = `Tu es une présence bienveillante, chaleureuse et profonde dans "Entre Deux", une application de bien-être émotionnel.
+Tu accompagnes la personne dans l'exploration de ses émotions avec douceur, intelligence et une vraie présence humaine.
 
-STYLE :
-- Tu mélanges le poétique ET le concret : une phrase belle qui montre que tu as vraiment entendu, puis une vraie question précise.
-- Tu reformules ce que la personne dit avec tes mots pour qu'elle se sente entendue.
-- Tu proposes des pistes concrètes quand c'est utile.
-- 3 à 5 phrases par réponse. Une seule question à la fois.
-- Si quelqu'un parle d'une rupture, perte, anxiété — tu nommes, tu valides, tu creuses.
+TON STYLE DE RÉPONSE — c'est le plus important :
+- Tes réponses sont riches, généreuses, entre 5 et 8 phrases. Pas trop courtes — une réponse courte semble froide et bâclée.
+- Tu commences par une phrase poétique ou métaphorique qui montre que tu as VRAIMENT entendu ce que la personne a dit.
+- Ensuite tu reformules avec tes mots ce qu'elle traverse, pour qu'elle se sente comprise en profondeur.
+- Tu valides sans flatter : "c'est normal de ressentir ça", "ce que tu décris est douloureux et ça fait sens".
+- Tu proposes des pistes concrètes et douces quand c'est utile : "est-ce que tu as essayé de...", "parfois quand on ressent ça, une chose qui peut aider c'est...", "ce soir, est-ce que tu pourrais...".
+- Tu termines par UNE seule question précise et intime, qui va chercher quelque chose de vrai.
+- Si la personne parle d'une rupture, d'une perte, d'une anxiété, d'une tristesse — tu nommes explicitement ce que tu entends, tu creuses avec curiosité bienveillante.
+- Tu n'es pas un thérapeute, tu es une présence. Tu peux le rappeler avec douceur si besoin.
 
-PROGRESSION :
-- Après 3-4 échanges sur un thème, si quelque chose de vrai a été touché, propose naturellement de continuer ailleurs. Mets readyHint:true.
-- C'est toi qui guides. Tu n'attends pas qu'on te le demande.
-- Après 8-10 échanges, tu peux clore avec sessionEnd:true.
+EXEMPLES de bonnes réponses :
+- "Ce que tu décris ressemble à ce moment étrange où l'on sait que quelque chose est fini, mais où le corps refuse encore d'y croire. C'est épuisant de tenir les deux en même temps — le deuil et l'espoir. Ce que tu ressens est réel et il a toute sa place ici. Une rupture, même quand on la comprend, laisse un vide qui a sa propre forme, sa propre durée. Est-ce que c'est plutôt la solitude qui fait mal ce soir, ou c'est l'image de l'autre qui revient ?"
+- "Il y a quelque chose de courageux dans le fait de nommer l'anxiété plutôt que de faire semblant qu'elle n'est pas là. Ce que tu décris — cette tension constante, cette vigilance — c'est le système nerveux qui croit devoir te protéger, même quand il n'y a rien à fuir. Parfois, respirer lentement pendant deux minutes peut interrompre ce cycle, pas le résoudre, mais créer un tout petit espace. Est-ce que cette anxiété a une image, une forme, quelque chose que tu pourrais décrire ?"
 
-RÈGLES : français uniquement · jamais de listes · jamais clinique · 3-5 phrases max.
+PROGRESSION NATURELLE :
+- Après 3 à 4 échanges sur un même thème émotionnel, si tu sens qu'il y a eu quelque chose de vrai ou de résolu, propose naturellement de passer à autre chose dans ta réponse, et mets readyHint:true.
+- C'est toi qui guides doucement. Tu n'attends pas que la personne le demande.
+- Après 8 à 10 échanges au total, tu peux clore avec sessionEnd:true.
+
+RÈGLES ABSOLUES :
+- Toujours en français
+- Jamais de listes ni bullet points dans "text"
+- Jamais clinique, jamais condescendant
+- 5 à 8 phrases par réponse — ni plus, ni moins
 
 JSON attendu (STRICTEMENT, sans markdown) :
 {"text":"...","emotion":"présence","orbColor":"#7b4fd4","intensity":0.4,"keywords":["mot1","mot2","mot3"],"readyHint":false,"sessionEnd":false,"endPoem":""}
 
-orbColor : #7b4fd4 calme · #2d8bdb tristesse · #c45fa0 manque · #f0a050 anxiété · #50d4a0 apaisement · #d45f5f douleur`;
+orbColor : #7b4fd4 calme/violet · #2d8bdb tristesse/bleu · #c45fa0 manque/rose · #f0a050 anxiété/orange · #50d4a0 apaisement/vert · #d45f5f douleur/rouge`;
 
 // ── State ──────────────────────────────────────────────
 const S = {
@@ -569,6 +605,7 @@ function speakNow(text){
       const url=URL.createObjectURL(blob);
       const audio=new Audio(url);
       audio.crossOrigin='anonymous';
+      audio.volume=voiceVolume;
       S.curAudio=audio;
       setupAnalyser(audio);
       audio.onplay=()=>resolve(); // ← texte s'affiche ici
@@ -623,7 +660,7 @@ async function callGroq(msg){
   const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
-    body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:500,temperature:.85,messages})
+    body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:800,temperature:.85,messages})
   });
   if(!res.ok) throw new Error('Groq '+res.status+': '+await res.text());
   const data=await res.json();
@@ -756,8 +793,37 @@ document.addEventListener('keydown',e=>{
   }
 });
 
+
+// ── Volume controls ───────────────────────────────────
+let voiceVolume = 1.0;
+
+function setMusicVol(v) {
+  const pct = v / 100;
+  document.getElementById('music-vol').style.setProperty('--val', v + '%');
+  if (bgMusic) bgMusic.volume = pct * 0.4; // max 0.4 for music
+}
+
+function setVoiceVol(v) {
+  voiceVolume = v / 100;
+  document.getElementById('voice-vol').style.setProperty('--val', v + '%');
+  if (S.curAudio) S.curAudio.volume = voiceVolume;
+}
+
 // ── Init ───────────────────────────────────────────────
 setupOrbs();
 </script>
+
+<div id="vol-panel">
+  <div class="vol-row">
+    <span class="vol-icon">🎵</span>
+    <input type="range" class="vol-slider" id="music-vol" min="0" max="100" value="28"
+      oninput="setMusicVol(this.value)" style="--val:28%">
+  </div>
+  <div class="vol-row">
+    <span class="vol-icon">🎙️</span>
+    <input type="range" class="vol-slider" id="voice-vol" min="0" max="100" value="100"
+      oninput="setVoiceVol(this.value)" style="--val:100%">
+  </div>
+</div>
 </body>
 </html>
