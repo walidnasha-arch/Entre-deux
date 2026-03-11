@@ -1028,9 +1028,21 @@ async function callGroq(msg){
   if(!res.ok) throw new Error('Groq '+res.status+': '+await res.text());
   const data=await res.json();
   const raw=data.choices[0].message.content;
-  const match=raw.match(/\{[\s\S]*\}/);
-  if(!match) throw new Error('JSON invalide');
-  const parsed=JSON.parse(match[0]);
+  // Nettoie les balises markdown éventuelles
+  let cleaned=raw.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+  // Extrait le premier bloc JSON valide
+  let parsed=null;
+  const matches=cleaned.match(/\{[\s\S]*?\}/g)||cleaned.match(/\{[\s\S]*\}/g);
+  if(matches){
+    for(const m of matches){
+      try{ parsed=JSON.parse(m); break; }catch(e){}
+    }
+  }
+  // Tentative sur tout le texte nettoyé si pas encore parsé
+  if(!parsed){
+    try{ parsed=JSON.parse(cleaned); }catch(e){}
+  }
+  if(!parsed) throw new Error('JSON invalide — réponse : '+raw.substring(0,200));
   S.history.push({role:'user',content:msg},{role:'assistant',content:raw});
   return parsed;
 }
