@@ -281,6 +281,8 @@ display: none;
     </p>
     <button class="btn" onclick="handleStart()">Entrer</button>
     <p style="font-size:0.6rem; opacity:0.25; margin-top:1.5rem; letter-spacing:0.1em">assure-toi que ton volume est activé</p>
+    <p id="debug-msg" style="font-size:0.65rem; color:#ff8888; margin-top:1rem; min-height:1.2rem"></p>
+    <button class="btn" style="margin-top:1rem; font-size:0.7rem; opacity:0.6" onclick="testSound()">🔊 Tester le son</button>
   </div>
 
   <!-- PLAYING -->
@@ -460,6 +462,9 @@ async function speak(text) {
     await audio.play();
   } catch(e) {
     console.error("Voice error:", e);
+    // Show visible error for debugging
+    const dbg = document.getElementById('debug-msg');
+    if (dbg) dbg.textContent = "Erreur: " + e.message;
   }
 }
 
@@ -467,6 +472,37 @@ function stopAudio() {
   if (state.currentAudio) {
     state.currentAudio.pause();
     state.currentAudio = null;
+  }
+}
+
+async function testSound() {
+  const dbg = document.getElementById('debug-msg');
+  dbg.textContent = "Connexion à ElevenLabs...";
+  try {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`, {
+      method: "POST",
+      headers: {
+        "xi-api-key": ELEVENLABS_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: "Je suis là.",
+        model_id: "eleven_multilingual_v2",
+        voice_settings: { stability: 0.75, similarity_boost: 0.85 }
+      })
+    });
+    if (!res.ok) {
+      dbg.textContent = "Erreur HTTP: " + res.status;
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.onplay = () => dbg.textContent = "✓ Son OK !";
+    audio.onerror = (e) => dbg.textContent = "Erreur audio: " + e.message;
+    await audio.play();
+  } catch(e) {
+    dbg.textContent = "Erreur: " + e.message;
   }
 }
 
